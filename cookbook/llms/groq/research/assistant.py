@@ -32,7 +32,7 @@ def get_research_assistant(
         add_to_system_prompt=dedent(
             """
             <report_format>
-            #### Individual Prospect Profile Example:
+            #### Individual Prospect Profile: John Doe
             - **Name:** John Doe
             - **Summary:** John Doe is a seasoned tech entrepreneur with a demonstrated history of success in the tech industry and a strong commitment to philanthropy. His current focus is on innovative solutions that address key societal challenges.
             - **Age:** 45
@@ -48,7 +48,7 @@ def get_research_assistant(
                 - Advocates for technology-driven solutions to social issues
                 - Actively participates in conferences and workshops related to tech innovation and social responsibility, with schedules and events listed on [EventBrite](https://www.eventbrite.com).
 
-            #### Nonprofit Organization Profile Example:
+            #### Nonprofit Organization Profile: Help the World Grow
             - **Organization Name:** Help the World Grow
             - **Summary:** Help the World Grow is a robust nonprofit organization with a global reach, actively working to enhance educational outcomes and reduce inequalities through strategic partnerships and impactful initiatives.
             - **Mission:** Dedicated to fostering educational opportunities and reducing inequality worldwide
@@ -64,7 +64,7 @@ def get_research_assistant(
                 - Collaborates with educational experts and local communities to tailor programs
                 - Addresses specific educational challenges in various regions
 
-            #### Company Profile Example:
+            #### Company Profile Example: Innovative Tech Solutions
             - **Company Name:** Innovative Tech Solutions
             - **Summary:** Innovative Tech Solutions is a leading tech company that stands at the forefront of AI and machine learning technology, with strong financial performance and strategic plans for continued growth and innovation in the industry.
             - **Industry:** Technology, specializing in AI and machine learning applications
