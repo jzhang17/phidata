@@ -102,7 +102,7 @@ def main() -> None:
     # Get topic for report
     input_topic = st.text_input(
         "Enter the name of a prospect or intermediary, can be a person, company or non-profit",
-        value="Bill Gate",
+        value="Bill Gates",
     )
     # Button to generate report
     generate_report = st.button("Generate Report")
