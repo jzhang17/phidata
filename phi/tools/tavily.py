@@ -40,7 +40,7 @@ class TavilyTools(Toolkit):
             else:
                 self.register(self.web_search_using_tavily)
 
-    def web_search_using_tavily(self, query: str, max_results: int = 20) -> str:
+    def web_search_using_tavily(self, query: str, max_results: int = 4) -> str:
         """Use this function to search the web for a given query.
         This function uses the Tavily API to provide realtime online information about the query.
 

@@ -1,8 +1,14 @@
 import streamlit as st
 from phi.tools.tavily import TavilyTools
-from assistant import get_research_assistant  # type: ignore
+from assistant import get_research_assistant, get_planning_assistant
 import markdown
 from streamlit.components.v1 import html
+import os
+import re
+
+
+os.environ["GROQ_API_KEY"] = "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"
+os.environ["TAVILY_API_KEY"] = "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"
 
 st.set_page_config(
     page_title="JZ NewBizBot",
@@ -83,10 +89,6 @@ def copy_to_clipboard(report):
     html(button_html)
 
 
-
-
-
-
 def main() -> None:
     # Get model
     llm_model = "llama3-70b-8192"
@@ -112,26 +114,52 @@ def main() -> None:
     if "topic" in st.session_state:
         report_topic = st.session_state["topic"]
         research_assistant = get_research_assistant(model=llm_model)
+        planning_assistant = get_planning_assistant(model=llm_model)
         tavily_search_results = None
 
-        with st.status("Searching Web", expanded=True) as status:
+        with st.status(f"{report_topic} - Planning Search", expanded=True) as status:
+            with st.container():
+                search_planning = ""
+                search_planning_container = st.empty()
+                for delta in planning_assistant.run(report_topic):
+                    search_planning += delta  # type: ignore
+                    search_planning_container.code(search_planning, language="python", line_numbers=True)
+                    matches = re.search(r"\[(.*?)\]", search_planning, re.DOTALL)
+                    if matches:
+                        # Split the found string by commas to get individual items
+                        search_list = matches.group(1).strip().split(",\n")
+                        # Strip extra spaces and quotes
+                        search_list = [item.strip().strip('"') for item in search_list]
+            status.update(label=f"{report_topic} - Planning Complete", state="complete", expanded=False)
+
+        with st.status(f"{report_topic} - Searching Web", expanded=True) as status:
             with st.container():
                 tavily_container = st.empty()
-                tavily_search_results = TavilyTools().web_search_using_tavily(report_topic)
+                tavily_search_results = ""
+                for search_queries in search_list:
+                    search_display = ""
+                    search_display += f"**Searching for:** {search_queries}"
+                    tavily_container.markdown(search_display)
+                    tavily_container = st.empty()
+
+                    tavily_search_results += TavilyTools().web_search_using_tavily(search_queries)
                 if tavily_search_results:
                     tavily_container.markdown(tavily_search_results)
-            status.update(label="Web Search Complete", state="complete", expanded=False)
-
+            status.update(label= f"{report_topic} - Web Search Results", state="complete", expanded=False)
+        
         if not tavily_search_results:
             st.write("Sorry report generation failed. Please try again.")
             return
 
-        with st.spinner("Generating Report"):
-            final_report = ""
-            final_report_container = st.empty()
-            for delta in research_assistant.run(tavily_search_results):
-                final_report += delta  # type: ignore
-                final_report_container.markdown(final_report)
-            copy_to_clipboard(markdown.markdown(final_report, extensions=['mdx_truly_sane_lists'], tab_length=2))
+        with st.status(f"{report_topic} - Generating Report", expanded=True) as status:
+            with st.container():
+                final_report = ""
+                final_report_container = st.empty()
+                for delta in research_assistant.run(tavily_search_results):
+                    final_report += delta  # type: ignore
+                    final_report_container.markdown(final_report)
+                copy_to_clipboard(markdown.markdown(final_report, extensions=['mdx_truly_sane_lists'], tab_length=2))
+            status.update(label= f"{report_topic} - Report Finished", state="complete", expanded=True)
+
 
 main()
