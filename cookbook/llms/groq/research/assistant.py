@@ -145,6 +145,8 @@ def get_planning_assistant(
     )
 
 "http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name="
+"http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name="
+
 def get_suggestion_assistant(
     model: str = "llama3-70b-8192",
     debug_mode: bool = True,
