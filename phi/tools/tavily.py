@@ -16,7 +16,7 @@ class TavilyTools(Toolkit):
         self,
         api_key: Optional[str] = None,
         search: bool = True,
-        max_tokens: int = 6000,
+        max_tokens: int = 2500,
         include_answer: bool = True,
         search_depth: Literal["basic", "advanced"] = "advanced",
         format: Literal["json", "markdown"] = "markdown",
@@ -40,7 +40,7 @@ class TavilyTools(Toolkit):
             else:
                 self.register(self.web_search_using_tavily)
 
-    def web_search_using_tavily(self, query: str, max_results: int = 4) -> str:
+    def web_search_using_tavily(self, query: str, max_results: int = 3) -> str:
         """Use this function to search the web for a given query.
         This function uses the Tavily API to provide realtime online information about the query.
 
@@ -79,9 +79,9 @@ class TavilyTools(Toolkit):
             return json.dumps(clean_response) if clean_response else "No results found."
         elif self.format == "markdown":
             _markdown = ""
-            _markdown += f"# {query}\n\n"
+            _markdown += f"### {query}\n\n"
             if "answer" in clean_response:
-                _markdown += "### Summary\n"
+                _markdown += "#### Summary\n"
                 _markdown += f"{clean_response.get('answer')}\n\n"
             for result in clean_response["results"]:
                 _markdown += f"### [{result['title']}]({result['url']})\n"

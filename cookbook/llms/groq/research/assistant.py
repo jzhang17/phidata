@@ -15,19 +15,19 @@ def get_research_assistant(
         description="You are an expert in wealth and investment management, specializing in developing comprehensive client profiles across various sectors. Your task is to create detailed financial profiles of potential clients without strategizing. Utilize your expertise to produce informative profiles that will aid in crafting personalized financial management plans later. Include hyperlinks to essential financial data sources like Bloomberg, Forbes, and specific financial databases for additional context.",
         instructions=[
             """
-            ### Context:
+            #### Context:
             Your service offerings include investment management, Outsourced Chief Investment Officer (OCIO) services, private banking, single-stock risk handling, and trust & estate planning. Leverage your expertise to provide analytical insights suitable for a diverse client base. Adopt a methodical and detail-oriented approach to ensure all pertinent financial details are covered comprehensively.
 
-            ### Objectives:
+            #### Objectives:
             1. **For an Individual**: Gather and document information about the individual’s employment history, age, personal net worth, diverse income sources, family circumstances, and involvement in boards or charities. Hyperlinks to LinkedIn or other relevant professional pages should be included for verification of employment history.
             
             2. **For a Nonprofit**: Compile the nonprofit’s asset details, highlight key Investment Committee members, top executives and board members, enumerate major donors, and review their financial transparency using links to platforms like [Cause IQ](https://www.causeiq.com/) and [ProPublica](https://www.propublica.org/) for access to recent Form 990s.
             
             3. **For a Company**: Create thorough profiles for top executives, pinpoint primary investors, record significant financial milestones, and evaluate the company's financial health using metrics like valuation, revenue, and profitability. Link to resources such as [Yahoo Finance](https://finance.yahoo.com/) or the company website for financial reports and analyses.
+            Be mindful when parsing information as not all information provided are related to the profile.
 
-            ### Desired Output:
-            Produce detailed, structured profiles that meticulously capture the financial and personal complexities of potential clients. These profiles should be rich in data and neatly organized to serve as a foundational tool for future reference. Ensure each profile incorporates as many relevant hyperlinks as possible to substantiate the information collected or to offer further insights.
-
+            #### Desired Output:
+            Produce detailed, structured profiles that meticulously capture the financial and personal complexities of potential clients. These profiles should be rich in data and neatly organized to serve as a foundational tool for future reference. Do not show in report if no information is provided relating to a topic (For example, Net Worth, family, age). Ensure each profile incorporates as many relevant hyperlinks as possible to substantiate the information collected or to offer further insights. 
             """
         ],
         add_to_system_prompt=dedent(
@@ -93,10 +93,6 @@ def get_research_assistant(
         debug_mode=debug_mode,
     )
 
-from textwrap import dedent
-from phi.llm.groq import Groq
-from phi.assistant import Assistant
-
 
 def get_planning_assistant(
     model: str = "llama3-70b-8192",
@@ -148,7 +144,7 @@ def get_planning_assistant(
 "http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name="
 
 def get_dp_assistant(
-    model: str = "mixtral-8x7b-32768",
+    model: str = "llama3-70b-8192",
     debug_mode: bool = True,
 ) -> Assistant:
     """Get a Groq DP Assistant."""
@@ -159,7 +155,7 @@ def get_dp_assistant(
         description="As an experienced professional in wealth management, your objective is to meticulously analyze a provided dossier. Your focus should be on identifying all relevant individuals and organizations mentioned within the text. These entities may include any person, company, or non-profit organization referenced.",
         instructions=[
             """
-            ### Instructions:
+            #### Instructions:
             1. Thoroughly read through the available dossier.
             2. Identify and list all people and organizations mentioned.
             3. For each identified entity, create a markdown-formatted entry that includes:
@@ -173,13 +169,17 @@ def get_dp_assistant(
             **For an Organization:**  
             `http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name=[Name]`
 
+            Use the title 
+            #### Search on Digital Prospecting:
             """
         ],
         add_to_system_prompt=dedent(
             """
+            <report_format>
+
             #### Search on Digital Prospecting:
-            - **John Doe** - Noted investor in renewable energy technologies. [Digital Prospecting](http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name=John%20Doe)
-            - **GreenTech Innovations** - A non-profit organization focused on advancing green technology. [Digital Prospecting](http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name=GreenTech%20Innovations)
+            - [**John Doe**](http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name=John%20Doe) - Noted investor in renewable energy technologies.
+            - [**GreenTech Innovations**](http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name=GreenTech%20Innovations) - A non-profit organization focused on advancing green technology.
             """
         ),
         # This setting tells the LLM to format messages in markdown
