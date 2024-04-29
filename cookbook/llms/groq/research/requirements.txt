@@ -181,3 +181,4 @@ urllib3==2.2.1
     # via requests
 markdown
 mdx_truly_sane_lists
+streamlit-pills

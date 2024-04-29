@@ -37,8 +37,8 @@ def get_research_assistant(
             - **Name:** John Doe
             - **Summary:** John Doe is a seasoned tech entrepreneur with a demonstrated history of success in the tech industry and a strong commitment to philanthropy. His current focus is on innovative solutions that address key societal challenges.
             - **Age:** 45
-            - **Loacation:** New York
-            - **Net Worth:** Approximately $2 million, verified by [WealthX](https://www.wealthx.com/)
+            - **Location:** New York
+            - **Net Worth:** Approximately \$2 million, verified by [WealthX](https://www.wealthx.com/)
             - **Occupation:** Tech Entrepreneur with a focus on innovative software solutions. View the LinkedIn Profile: [John Doe](https://www.linkedin.com/in/johndoe/)
             - **Family Dynamics:** Married with two children, emphasizing a balanced work-life integration
             - **Board Affiliations:** Active in philanthropic ventures; serves on the boards of:
@@ -52,15 +52,15 @@ def get_research_assistant(
 
             #### Nonprofit Organization Profile: Help the World Grow
             - **Organization Name:** Help the World Grow
-            - **Loacation:** Los Angeles, CA
+            - **Location:** Los Angeles, CA
             - **Summary:** Help the World Grow is a robust nonprofit organization with a global reach, actively working to enhance educational outcomes and reduce inequalities through strategic partnerships and impactful initiatives.
             - **Mission:** Dedicated to fostering educational opportunities and reducing inequality worldwide
-            - **Asset Size:** Estimated at $5 million
+            - **Asset Size:** Estimated at \$5 million
             - **Investment Committee Key Member:** Jane Smith, notable for her expertise in financial strategy; profile available on the organization’s [team page](https://www.helptheworldgrow.org/team)
             - **Major Donors:**
                 - XYZ Corp: Engaged in various corporate philanthropy efforts, details [here](https://www.xyzcorp.com/philanthropy)
                 - ABC Foundation: Long-term supporter, focusing on impactful projects
-            - **Financial Disclosures:** Recent Form 990 indicates a surplus of $200,000 in the last fiscal year. The report is accessible at [CauseIQ](https://www.causeiq.com/)
+            - **Financial Disclosures:** Recent Form 990 indicates a surplus of \$200,000 in the last fiscal year. The report is accessible at [CauseIQ](https://www.causeiq.com/)
             - **Impact Highlights:** Recent projects have notably increased literacy rates in underserved regions
             - **Recent News:** The organization has launched a new initiative in partnership with local governments in South America to enhance educational infrastructure, reported last week by CNN. Full story [here](https://www.cnn.com).
             - **Additional Information:** 
@@ -69,16 +69,16 @@ def get_research_assistant(
 
             #### Company Profile Example: Innovative Tech Solutions
             - **Company Name:** Innovative Tech Solutions
-            - **Loacation:** San Diego
+            - **Location:** San Diego
             - **Summary:** Innovative Tech Solutions is a leading tech company that stands at the forefront of AI and machine learning technology, with strong financial performance and strategic plans for continued growth and innovation in the industry.
             - **Industry:** Technology, specializing in AI and machine learning applications
             - **CEO:** Robert Johnson, a visionary leader with over 20 years in the tech industry. Full bio available on [Bloomberg Executives](https://www.bloomberg.com/profile/person/xxxxx)
             - **Founder:** Emily White, an entrepreneur recognized for her innovative approaches to technology development
             - **Major Investors:** Includes prominent venture capital firms such as [VentureXYZ](https://www.venturexyz.com) and [CapitalABC](https://www.capitalabc.com)
             - **Financial Performance Metrics:**
-                - Current Valuation: $50 million
-                - Annual Revenue: $10 million, demonstrating robust growth in the tech sector
-                - Annual Profit: $1 million, highlighting effective cost management and business operations
+                - Current Valuation: \$50 million
+                - Annual Revenue: \$10 million, demonstrating robust growth in the tech sector
+                - Annual Profit: \$1 million, highlighting effective cost management and business operations
             - **Strategic Goals:** Aiming to expand market reach through the development of new technologies and strategic partnerships
             - **Recent News:** Innovative Tech Solutions has been awarded a patent for a groundbreaking AI algorithm that optimizes energy usage in large-scale manufacturing, as reported last month by Forbes. More details [here](https://www.forbes.com).
             - **Additional Information:** 
@@ -121,16 +121,16 @@ def get_planning_assistant(
         add_to_system_prompt=dedent(
             """
             [
-                "Comprehensive overview of John Doe’s professional profile, role, and contributions at XYZ Corporation.",
-                "Asset size and operational scope of XYZ Foundation as analyzed from CauseIQ.",
-                "Financial status, investment strategies, and economic interests of John Doe.",
-                "Investment landscape, major stakeholders, and market performance of XYZ Corporation.",
-                "Personal biography, family background, and philanthropic engagements of John Doe.",
-                "Financial developments, investment rounds, and major business events recently impacting XYZ Corporation.",
-                "Detailed career trajectory of John Doe, including board memberships and executive roles across industries.",
-                "Economic performance and strategic growth metrics of XYZ Corporation over recent years.",
-                "Strategic investment decisions and leadership impact of John Doe within XYZ Corporation.",
-                "Leadership structure, executive roles, and governance of XYZ Foundation."
+                "John Doe’s comprehensive overview of professional profile, role, and contributions at XYZ Corporation.",
+                "XYZ Foundation's asset size and operational scope as analyzed from CauseIQ.",
+                "John Doe's financial status, investment strategies, and economic interests.",
+                "XYZ Corporation's investment landscape, major shareholders, and market performance.",
+                "John Doe's personal biography, family background, and philanthropic engagements.",
+                "XYZ Corporation's financial developments, funding rounds, and major liquidity events recently impacting it as analyzed from Pitchbook.",
+                "John Doe's detailed career trajectory, including board memberships and executive roles across industries.",
+                "XYZ Corporation's economic performance and strategic growth metrics over recent years.",
+                "John Doe's strategic investment decisions and leadership impact within XYZ Corporation.",
+                "XYZ Foundation's leadership structure, executive roles, and governance."
             ]
             """
         ),
@@ -157,7 +157,7 @@ def get_dp_assistant(
             1. Thoroughly read through the available dossier.
             2. Identify and list all people and organizations mentioned.
             3. For each identified entity, create a markdown-formatted entry that includes:
-            - **Name** of the person or organization, add unicode emoji at the beginning to indicate person 👤 or organization 🏛️
+            - **Name** of the person or organization
             - A **brief description** of their relevance or role
             - A **customized link** for further exploration or research which you must construct by appending the entity's name to the appropriate base URL provided below:
 
@@ -182,6 +182,39 @@ def get_dp_assistant(
         ),
         # This setting tells the LLM to format messages in markdown
         markdown=True,
+        add_datetime_to_instructions=True,
+        debug_mode=debug_mode,
+    )
+
+def get_suggestion_assistant(
+    model: str = "llama3-70b-8192",
+    debug_mode: bool = True,
+) -> Assistant:
+    """Get a Groq suggestion Assistant."""
+
+    return Assistant(
+        name="groq_research_assistant",
+        llm=Groq(model=model),
+        description="As an experienced professional in wealth management, your objective is to meticulously analyze a provided dossier. Your focus should be on identifying all relevant individuals and organizations mentioned within the text. These entities may include any person, company, or non-profit organization referenced.",
+        instructions=[
+            """
+            #### Instructions:
+            1. Thoroughly read through the available dossier.
+            2. Identify and list all people and organizations mentioned.
+            3. For each identified entity, produce a list using Python format.
+            
+            ### Desired Output:
+            Produce a list using Python format that exclusively contains the identified entities from the dossier. 
+
+            """
+        ],
+        add_to_system_prompt=dedent(
+            """
+            ["John Doe", "XYZ Investments LLC", "The Green Fund", "Jane Smith"]
+            """
+        ),
+        # This setting tells the LLM to format messages in markdown
+        markdown=False,
         add_datetime_to_instructions=True,
         debug_mode=debug_mode,
     )
