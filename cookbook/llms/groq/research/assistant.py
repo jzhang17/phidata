@@ -140,8 +140,6 @@ def get_planning_assistant(
         debug_mode=debug_mode,
     )
 
-"http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name="
-"http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name="
 
 def get_dp_assistant(
     model: str = "llama3-70b-8192",
@@ -159,7 +157,7 @@ def get_dp_assistant(
             1. Thoroughly read through the available dossier.
             2. Identify and list all people and organizations mentioned.
             3. For each identified entity, create a markdown-formatted entry that includes:
-            - **Name** of the person or organization
+            - **Name** of the person or organization, add unicode emoji at the beginning to indicate person 👤 or organization 🏛️
             - A **brief description** of their relevance or role
             - A **customized link** for further exploration or research which you must construct by appending the entity's name to the appropriate base URL provided below:
 
