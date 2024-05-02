@@ -46,6 +46,7 @@ def main() -> None:
         dp_assistant = get_dp_assistant(model=llm_model)
 
         tavily_search_results = None
+        spacing = "\n---\n"  # Adjust the number of new lines or use a horizontal rule for separation
 
         with st.status(f"🔍 {report_topic} - Initial Search", expanded=True) as status:
             with st.container():
@@ -63,7 +64,12 @@ def main() -> None:
                 for delta in research_assistant.run(tavily_search_results1):
                     first_report += delta  # type: ignore
                     first_report_container.markdown(first_report)
-            status.update(label= f"📝 {report_topic} - First Draft Finished", state="complete", expanded=False)
+
+                dp_report = ""
+                for delta in dp_assistant.run(first_report):
+                    dp_report += delta  # type: ignore
+                    first_report_container.markdown(first_report + spacing + dp_report)  
+            status.update(label= f"📝 {report_topic} - First Draft Finished", state="complete", expanded=True)
 
         with st.status(f"🔍 {report_topic} - Follow-up Search", expanded=True) as status:
             with st.container():
@@ -88,20 +94,19 @@ def main() -> None:
                     tavily_search_results += TavilyTools().web_search_using_tavily(search_queries)
                 if tavily_search_results:
                     tavily_container.markdown(tavily_search_results)
-            status.update(label= f"🔍 {report_topic} - Web Search Results", state="complete", expanded=False)
+            status.update(label= f"🔍 {report_topic} - Follow-up Search Results", state="complete", expanded=False)
         
         if not tavily_search_results:
             st.write("Sorry report generation failed. Please try again.")
             return
         
-        spacing = "\n---\n"  # Adjust the number of new lines or use a horizontal rule for separation
 
 
-        with st.status(f"📝 {report_topic} - Generating Report", expanded=True) as status:
+        with st.status(f"📝 {report_topic} - Generating Follow-up Report", expanded=True) as status:
             with st.container():
                 final_report = ""
                 final_report_container = st.empty()
-                for delta in research_assistant.run(first_report + spacing + tavily_search_results):
+                for delta in research_assistant.run(tavily_search_results + spacing + first_report):
                     final_report += delta  # type: ignore
                     final_report_container.markdown(final_report)
                         
@@ -109,7 +114,7 @@ def main() -> None:
                 for delta in dp_assistant.run(final_report):
                     dp_report += delta  # type: ignore
                     final_report_container.markdown(final_report + spacing + dp_report)                
-            status.update(label= f"📝 {report_topic} - Report Finished", state="complete", expanded=True)
+            status.update(label= f"📝 {report_topic} - Follow-up Report", state="complete", expanded=True)
 
 
 main()

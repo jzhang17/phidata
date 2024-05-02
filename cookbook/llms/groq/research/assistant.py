@@ -120,6 +120,7 @@ def get_planning_assistant(
         ],
         add_to_system_prompt=dedent(
             """
+            ```python
             [
                 "John Doe’s comprehensive overview of professional profile, role, and contributions at XYZ Corporation.",
                 "XYZ Foundation's asset size and operational scope as analyzed from CauseIQ.",
@@ -132,6 +133,7 @@ def get_planning_assistant(
                 "John Doe's strategic investment decisions and leadership impact within XYZ Corporation.",
                 "XYZ Foundation's leadership structure, executive roles, and governance."
             ]
+            ```
             """
         ),
         # This setting tells the LLM to format messages in markdown
@@ -232,29 +234,31 @@ def get_followup_assistant(
         instructions=[
             """
             ### Instructions:
-            As a seasoned business analyst with access to a preliminary report containing critical client data, your task is to enhance this information by constructing well-defined search queries. Use these queries to explore not only the surface-level data but also to uncover deeper insights such as potential business collaborations and expansions. Your responses should be formatted as Python lists to facilitate integration with existing data processing systems.
 
-            ### Context:
-            You have a basic report featuring essential details about different entities such as individuals, nonprofits, and companies. Your expertise is needed to probe further into each entity's background, crafting a more comprehensive profile that includes undisclosed business opportunities and networks.
+            1. Read through the initial draft report carefully, identify key topics, and assess areas that are under-explored or lacking detailed information.
+            2. Develop a Python list containing three specific search queries:
+            - The first query should aim to gather comprehensive details about the main subject of the report.
+            - The next two queries should focus on collecting more information about other relevant entities (individuals, nonprofits, or companies) mentioned in the report which are lacking in detail.
 
-            ### Objectives:
-            Formulate search queries to uncover information about Individual's career development, investment interests, significant alliances, and business partnership prospects.
-            Design queries to obtain detailed data regarding nonprofit asset size, key board members, and recent developments
-            Generate queries to discover insights about company's  influential executives, financial data, liquidity events, recent news
-            ### Desired Output:
-            Produce three precise search queries per entity category composed in a Python list format. Each query should aim to reveal not just fundamental details but also to hint at broader business implications connected to each subject’s profile.
+            ### Output Format:
+            Provide your search queries in the form of a Python list. Each query must be formulated clearly and precisely to ensure relevancy and depth in the search results.
+
             """
         ],
         add_to_system_prompt=dedent(
             """
             ```python
             [
-                "John Doe's professional background at XYZ Corporation, detailing board roles and strategic contributions.",
-                "XYZ Foundation's current financial metrics and assets, focusing on governance and operational territories according to Cause IQ.",
-                "XYZ Corporation's key financial dealings and investor landscape, including recent significant events, sourced from databases like Pitchbook.",
-                "John Doe's biographical sketch and philanthropic affiliations, emphasizing his roles on major charity boards.",
-                "XYZ Corporation's growth trajectories and fiscal health over the past decade, compared to industry benchmarks.",
-                "XYZ Foundation's leadership dynamics and decision-making structures, highlighting critical executive influences and committee roles."
+                "John Doe’s comprehensive overview of professional profile, role, and contributions at XYZ Corporation.",
+                "XYZ Foundation's asset size and operational scope as analyzed from CauseIQ.",
+                "John Doe's financial status, investment strategies, and economic interests.",
+                "XYZ Corporation's investment landscape, major shareholders, and market performance.",
+                "John Doe's personal biography, family background, and philanthropic engagements.",
+                "XYZ Corporation's financial developments, funding rounds, and major liquidity events recently impacting it as analyzed from Pitchbook.",
+                "John Doe's detailed career trajectory, including board memberships and executive roles across industries.",
+                "XYZ Corporation's economic performance and strategic growth metrics over recent years.",
+                "John Doe's strategic investment decisions and leadership impact within XYZ Corporation.",
+                "XYZ Foundation's leadership structure, executive roles, and governance."
             ]
             ```
             """
