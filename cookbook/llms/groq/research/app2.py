@@ -106,7 +106,7 @@ def main() -> None:
             with st.container():
                 final_report = ""
                 final_report_container = st.empty()
-                for delta in research_assistant.run(tavily_search_results + spacing + first_report):
+                for delta in research_assistant.run(tavily_search_results):
                     final_report += delta  # type: ignore
                     final_report_container.markdown(final_report)
                         
