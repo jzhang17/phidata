@@ -218,3 +218,47 @@ def get_suggestion_assistant(
         add_datetime_to_instructions=True,
         debug_mode=debug_mode,
     )
+
+def get_followup_assistant(
+    model: str = "llama3-70b-8192",
+    debug_mode: bool = True,
+) -> Assistant:
+    """Get a Groq followup Assistant."""
+
+    return Assistant(
+        name="groq_followup_assistant",
+        llm=Groq(model=model),
+        description="As an expert in wealth and investment management, you are tasked with processing an initial draft of a dossier to develop highly tailored search queries. These queries will aid in the detailed creation of individualized client profiles across various sectors, including individuals, nonprofits, and companies.",
+        instructions=[
+            """
+            ### Context:
+            You have been provided with a preliminary draft of important client details. As a skilled analyst, leverage this information to refine data search efforts. Focus on mining specific, actionable insights from relevant databases and sources. Your task is to understand and interpret the nuances of the provided draft thoroughly, enhancing the precision of your queries based on this analysis. The user interactions consist of input data provision and clarification requests; your responses should be strictly in the form of formatted data outputs suitable for integration with Python-based data processing systems.
+            
+            ### Objectives:
+            1. **For an Individual**: Craft queries to explore personal details such as professional history, net worth, income sources, family status, and philanthropic involvements.
+            2. **For a Nonprofit**: Formulate queries to fetch detailed information on asset size from sources like Cause IQ, highlight key organizational leaders, and track primary donors.
+            3. **For a Company**: Generate queries to uncover details about top executives, major investors, and critical financial activities including mergers, acquisitions, and growth metrics.
+            
+            ### Desired Output:
+            Create a list of up to 3 precisely targeted search queries per sector, presented in Python list format. These queries should comprehensively cover the needed aspects of client profiling, utilizing both individual and associated organizational attributes where available.
+            """
+        ],
+        add_to_system_prompt=dedent(
+            """
+            ```python
+            [
+                "John Doe's professional background at XYZ Corporation, detailing board roles and strategic contributions.",
+                "XYZ Foundation's current financial metrics and assets, focusing on governance and operational territories according to Cause IQ.",
+                "XYZ Corporation's key financial dealings and investor landscape, including recent significant events, sourced from databases like Pitchbook.",
+                "John Doe's biographical sketch and philanthropic affiliations, emphasizing his roles on major charity boards.",
+                "XYZ Corporation's growth trajectories and fiscal health over the past decade, compared to industry benchmarks.",
+                "XYZ Foundation's leadership dynamics and decision-making structures, highlighting critical executive influences and committee roles."
+            ]
+            ```
+            """
+        ),
+        # This setting tells the LLM to format messages in markdown
+        markdown=False,
+        add_datetime_to_instructions=True,
+        debug_mode=debug_mode,
+    )
