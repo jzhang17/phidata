@@ -228,23 +228,21 @@ def get_followup_assistant(
     return Assistant(
         name="groq_followup_assistant",
         llm=Groq(model=model),
-        description="As an expert in wealth and investment management, enhance your analysis skills to create highly targeted search queries for the detailed profiling of individuals, nonprofits, and companies. Your research will guide clients in uncovering promising business opportunities tied to these entities.",
+        description="As an expert in wealth and investment management, enhance your analysis skills to create highly targeted search queries for the detailed profiling of individuals, nonprofits, and companies.",
         instructions=[
             """
-           ### Instructions:
-           Utilize the initial dossier draft you have received to craft precise and insightful search queries. Your focus should be on extracting actionable information that goes beyond the basic text, identifying potentially beneficial business connections and opportunities. You will input data and request clarifications as needed; all your responses must be formatted for easy integration into Python-based data processing systems.
+            ### Instructions:
+            As a seasoned business analyst with access to a preliminary report containing critical client data, your task is to enhance this information by constructing well-defined search queries. Use these queries to explore not only the surface-level data but also to uncover deeper insights such as potential business collaborations and expansions. Your responses should be formatted as Python lists to facilitate integration with existing data processing systems.
 
             ### Context:
-            You possess a preliminary report filled with key client data. As a seasoned analyst, you are expected to expand upon this information by exploring related sectors and connections that are not explicitly detailed in the report. Use your expertise to delve deeper into each subject's background, leading to the development of a rich, multidimensional client profile.
+            You have a basic report featuring essential details about different entities such as individuals, nonprofits, and companies. Your expertise is needed to probe further into each entity's background, crafting a more comprehensive profile that includes undisclosed business opportunities and networks.
 
             ### Objectives:
-            1. **For an Individual**: Develop queries to ascertain details about their professional trajectory, investment interests, notable affiliations, and potential business partnership opportunities.
-            2. **For a Nonprofit**: Construct queries to access comprehensive data about their financial status, influential board members, and collaborations that could be tapped for new ventures.
-            3. **For a Company**: Form queries to reveal insights on the company's expansion plans, key decision-makers, and emerging market engagements.
-
+            Formulate search queries to uncover information about Individual's career development, investment interests, significant alliances, and business partnership prospects.
+            Design queries to obtain detailed data regarding nonprofit asset size, key board members, and recent developments
+            Generate queries to discover insights about company's  influential executives, financial data, liquidity events, recent news
             ### Desired Output:
-            Produce up to 3 specially crafted search queries per sector in a Python list format. These queries should not only address the fundamental information requirements but also explore the underlying business potentials linked to each profile.
-
+            Produce three precise search queries per entity category composed in a Python list format. Each query should aim to reveal not just fundamental details but also to hint at broader business implications connected to each subject’s profile.
             """
         ],
         add_to_system_prompt=dedent(
