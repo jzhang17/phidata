@@ -27,7 +27,7 @@ def get_research_assistant(
             Be mindful when parsing information as not all information provided are related to the profile.
 
             #### Desired Output:
-            Produce detailed, structured profiles that meticulously capture the financial and personal complexities of potential clients. These profiles should be rich in data and neatly organized to serve as a foundational tool for future reference. Do not show in report if no information is provided relating to a topic (For example, Net Worth, family, age). Ensure each profile incorporates as many relevant hyperlinks as possible to substantiate the information collected or to offer further insights. 
+            Produce detailed, structured profiles that meticulously capture the financial and personal complexities of potential clients. These profiles should be rich in data and neatly organized to serve as a foundational tool for future reference. Omit information if  data is not provided or not disclosed relating to a topic (For example, Net Worth, family, age). Ensure each profile incorporates as many relevant hyperlinks as possible to substantiate the information collected or to offer further insights. 
             """
         ],
         add_to_system_prompt=dedent(
@@ -67,7 +67,7 @@ def get_research_assistant(
                 - Collaborates with educational experts and local communities to tailor programs
                 - Addresses specific educational challenges in various regions
 
-            #### Company Profile Example: Innovative Tech Solutions
+            #### Company Profile: Innovative Tech Solutions
             - **Company Name:** Innovative Tech Solutions
             - **Location:** San Diego
             - **Summary:** Innovative Tech Solutions is a leading tech company that stands at the forefront of AI and machine learning technology, with strong financial performance and strategic plans for continued growth and innovation in the industry.

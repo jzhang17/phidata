@@ -6,6 +6,7 @@ from streamlit.components.v1 import html
 from streamlit_pills import pills
 import os
 import re
+import time
 
 os.environ["GROQ_API_KEY"] = "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"
 os.environ["TAVILY_API_KEY"] = "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"
@@ -64,11 +65,6 @@ def main() -> None:
                 for delta in research_assistant.run(tavily_search_results1):
                     first_report += delta  # type: ignore
                     first_report_container.markdown(first_report)
-
-                dp_report = ""
-                for delta in dp_assistant.run(first_report):
-                    dp_report += delta  # type: ignore
-                    first_report_container.markdown(first_report + spacing + dp_report)  
             status.update(label= f"📝 {report_topic} - First Draft Finished", state="complete", expanded=True)
 
         with st.status(f"🔍 {report_topic} - Follow-up Search", expanded=True) as status:
@@ -109,9 +105,11 @@ def main() -> None:
                 for delta in research_assistant.run(tavily_search_results):
                     final_report += delta  # type: ignore
                     final_report_container.markdown(final_report)
-                        
+
+                time.sleep(5)
+
                 dp_report = ""
-                for delta in dp_assistant.run(final_report):
+                for delta in dp_assistant.run(first_report + final_report):
                     dp_report += delta  # type: ignore
                     final_report_container.markdown(final_report + spacing + dp_report)                
             status.update(label= f"📝 {report_topic} - Follow-up Report", state="complete", expanded=True)
