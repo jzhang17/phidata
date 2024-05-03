@@ -29,10 +29,15 @@ def main() -> None:
         st.session_state["llm_model"] = llm_model
         st.rerun()
 
+    query_params = st.query_params
+
+    # Default to "Bill Gates" if 'input' is not provided
+    input_value = query_params.get('input', ['Bill Gates'])
+
     # Get topic for report
     input_topic = st.text_input(
         "Enter the name of a prospect or intermediary, can be a person, company or non-profit",
-        value="Bill Gates",
+        value=input_value,
     )
     # Button to generate report
     generate_report = st.button("Generate Report")
