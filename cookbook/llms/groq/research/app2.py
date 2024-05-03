@@ -32,7 +32,7 @@ def main() -> None:
     query_params = st.query_params
 
     # Default to "Bill Gates" if 'input' is not provided
-    input_value = query_params.get('input', ['Bill Gates'])
+    input_value = query_params.get('input', 'Bill Gates')
 
     # Get topic for report
     input_topic = st.text_input(
