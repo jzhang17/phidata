@@ -222,7 +222,7 @@ def get_suggestion_assistant(
     )
 
 def get_followup_assistant(
-    model: str = "llama3-70b-8192",
+    model: str = "mixtral-8x7b-32768",
     debug_mode: bool = True,
 ) -> Assistant:
     """Get a Groq followup Assistant."""
@@ -238,7 +238,7 @@ def get_followup_assistant(
             1. Read through the initial draft report carefully, identify key topics, and assess areas that are under-explored or lacking detailed information.
             2. Develop a Python list containing three specific search queries:
             - The first query should aim to gather comprehensive details about the main subject of the report.
-            - The next two queries should focus on collecting more information about other relevant entities (individuals, nonprofits, or companies) mentioned in the report which are lacking in detail.
+            - The next queries should focus on collecting more information about other relevant entities (individuals, nonprofits, or companies) mentioned in the report which are lacking in detail.
 
             ### Output Format:
             Provide your search queries in the form of a Python list. Each query must be formulated clearly and precisely to ensure relevancy and depth in the search results.
@@ -265,6 +265,38 @@ def get_followup_assistant(
         ),
         # This setting tells the LLM to format messages in markdown
         markdown=False,
+        add_datetime_to_instructions=True,
+        debug_mode=debug_mode,
+    )
+
+def get_consolidate_assistant(
+    model: str = "mixtral-8x7b-32768",
+    debug_mode: bool = True,
+) -> Assistant:
+    """Get a Groq consolidate Assistant."""
+
+    return Assistant(
+        name="groq_consolidate_assistant",
+        llm=Groq(model=model),
+        description="As an experienced professional in wealth management, your objective is to consolidate a few related reports into one document",
+        instructions=[
+            """
+            ### Instructions:
+            1. **Review All Data**: Carefully examine the notes provided, ensuring no detail is overlooked.
+            2. **Consolidate Information**: Merge all relevant information into one cohesive report. This includes combining duplicates and maintaining the original style of the content.
+            3. **Format Correctly**: Format financial figures, specifically those involving dollar amounts, using markdown format—for instance, write dollar amounts like `$100` instead of "100 dollars".
+            4. **Eliminate Redundant Data**: Remove any rows or entries labeled with phrases such as "not available," "not disclosed," "not specific," "not provided," or "no information."
+
+            """
+        ],
+        add_to_system_prompt=dedent(
+            """
+            <report_format>
+
+            """
+        ),
+        # This setting tells the LLM to format messages in markdown
+        markdown=True,
         add_datetime_to_instructions=True,
         debug_mode=debug_mode,
     )
