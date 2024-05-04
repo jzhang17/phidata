@@ -251,13 +251,7 @@ def get_followup_assistant(
             [
                 "John Doe’s comprehensive overview of professional profile, role, and contributions at XYZ Corporation.",
                 "XYZ Foundation's asset size and operational scope as analyzed from CauseIQ.",
-                "John Doe's financial status, investment strategies, and economic interests.",
-                "XYZ Corporation's investment landscape, major shareholders, and market performance.",
-                "John Doe's personal biography, family background, and philanthropic engagements.",
                 "XYZ Corporation's financial developments, funding rounds, and major liquidity events recently impacting it as analyzed from Pitchbook.",
-                "John Doe's detailed career trajectory, including board memberships and executive roles across industries.",
-                "XYZ Corporation's economic performance and strategic growth metrics over recent years.",
-                "John Doe's strategic investment decisions and leadership impact within XYZ Corporation.",
                 "XYZ Foundation's leadership structure, executive roles, and governance."
             ]
             ```
