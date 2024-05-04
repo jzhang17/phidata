@@ -236,9 +236,9 @@ def get_followup_assistant(
             ### Instructions:
 
             1. Read through the initial draft report carefully, identify key topics, and assess areas that are under-explored or lacking detailed information.
-            2. Develop a Python list containing three specific search queries:
-            - The first query should aim to gather comprehensive details about the main subject of the report.
-            - The next queries should focus on collecting more information about other relevant entities (individuals, nonprofits, or companies) mentioned in the report which are lacking in detail.
+            2. Develop a Python list containing Four specific search queries:
+            - The first two query should aim to gather comprehensive details about the main subject of the report.
+            - The next twoqueries should focus on collecting more information about other relevant entities (individuals, nonprofits, or companies) mentioned in the report which are lacking in detail.
 
             ### Output Format:
             Provide your search queries in the form of a Python list. Each query must be formulated clearly and precisely to ensure relevancy and depth in the search results.
