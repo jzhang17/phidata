@@ -8,9 +8,6 @@ import os
 import re
 import time
 
-os.environ["GROQ_API_KEY"] = "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"
-os.environ["TAVILY_API_KEY"] = "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"
-
 st.set_page_config(
     page_title="JZ NewBizBot #2",
     page_icon="💰",
