@@ -1,18 +1,16 @@
 import streamlit as st
 from phi.tools.tavily import TavilyTools
-from assistant import get_research_assistant, get_planning_assistant, get_dp_assistant, get_followup_assistant, get_consolidate_assistant
-import markdown
+from assistant_els import get_research_assistant, get_followup_assistant, get_consolidate_assistant
 from streamlit.components.v1 import html
-from streamlit_pills import pills
 import os
 import re
-import time
+
 
 st.set_page_config(
-    page_title="JZ NewBizBot #2",
-    page_icon="💰",
+    page_title="ELS NetworkingBot",
+    page_icon="🎞️",
 )
-st.title("JZ NewBizBot #2")
+st.title("ELS NetworkingBot")
 
 def main() -> None:
     # Get model
@@ -29,11 +27,11 @@ def main() -> None:
     query_params = st.query_params
 
     # Default to "Bill Gates" if 'input' is not provided
-    input_value = query_params.get('input', 'Bill Gates')
+    input_value = query_params.get('input', '')
 
     # Get topic for report
     input_topic = st.text_input(
-        "Enter the name of a prospect or intermediary, can be a person, company or non-profit",
+        "Enter the name of a project, company or person",
         value=input_value,
     )
     # Button to generate report
@@ -44,9 +42,7 @@ def main() -> None:
     if "topic" in st.session_state:
         report_topic = st.session_state["topic"]
         research_assistant = get_research_assistant(model=llm_model)
-        planning_assistant = get_planning_assistant(model=llm_model)
         followup_assistant = get_followup_assistant(model="mixtral-8x7b-32768")
-        dp_assistant = get_dp_assistant(model=llm_model)
         consolidate_assistant = get_consolidate_assistant(model="mixtral-8x7b-32768")
 
         tavily_search_results = None
@@ -120,15 +116,9 @@ def main() -> None:
                     consolidate_report += delta  # type: ignore
                     consolidate_report_container.markdown(consolidate_report)
 
-                dp_report = ""
-                for delta in dp_assistant.run(first_report + followup_report):
-                    dp_report += delta  # type: ignore
-                    consolidate_report_container.markdown(consolidate_report + spacing + dp_report)       
             status.update(label= f"📝 {report_topic} - Consolidated Report", state="complete", expanded=True)
 
         first_draft_status.update(expanded=False)
         followup_status.update(expanded=False)
-
-
 
 main()
