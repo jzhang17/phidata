@@ -114,7 +114,7 @@ def get_followup_assistant(
             2. Develop a Python list containing four specific search queries in sentences:
                 - Gather comprehensive details about the main topic (movie, show, people, company) of the report.
                 - Focus on collecting more information about other key personnel, companies or project mentioned in the report that are lacking in detail.
-                - Include a query to search LinkedIn for a list of current employees at the company to understand staffing and key figures.
+                - Include a query to search LinkedIn for a list of current employees at the company.
 
             ### Output Format:
             Provide your search queries in the form of a Python list. Each query must be formulated clearly and precisely to ensure relevancy and depth in the search results.
