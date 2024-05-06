@@ -41,8 +41,8 @@ def main() -> None:
     if "topic" in st.session_state:
         report_topic = st.session_state["topic"]
         research_assistant = get_research_assistant(model=llm_model)
-        followup_assistant = get_followup_assistant(model="mixtral-8x7b-32768")
-        consolidate_assistant = get_consolidate_assistant(model="mixtral-8x7b-32768")
+        followup_assistant = get_followup_assistant(model="llama3-8b-8192")
+        consolidate_assistant = get_consolidate_assistant(model="llama3-8b-8192")
 
         tavily_search_results = None
         spacing = "\n---\n"  # Adjust the number of new lines or use a horizontal rule for separation
