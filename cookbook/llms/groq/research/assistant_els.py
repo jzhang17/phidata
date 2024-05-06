@@ -112,8 +112,8 @@ def get_followup_assistant(
             #### Instructions:
             1. Read through the initial draft report carefully, identify key topics, and assess areas that are under-explored or lacking detailed information.
             2. Develop a Python list containing four specific search queries in sentences:
-                - The first two queries should aim to gather comprehensive details about the main project (movie or show) of the report.
-                - The next two queries should focus on collecting more information about key personnel or companies mentioned in the report that are lacking in detail.
+                - Gather comprehensive details about the main topic (movie, show, people, company) of the report.
+                - Focus on collecting more information about other key personnel, companies or project mentioned in the report that are lacking in detail.
                 - Include a query to search LinkedIn for a list of current employees at the company to understand staffing and key figures.
 
             ### Output Format:
