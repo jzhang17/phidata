@@ -98,7 +98,7 @@ def get_research_assistant(
 
 
 def get_followup_assistant(
-    model: str = "mixtral-8x7b-32768",
+    model: str = "llama3-8b-8192",
     debug_mode: bool = True,
 ) -> Assistant:
     """Get a Groq followup Assistant."""
@@ -141,7 +141,7 @@ def get_followup_assistant(
     )
 
 def get_consolidate_assistant(
-    model: str = "mixtral-8x7b-32768",
+    model: str = "llama3-8b-8192",
     debug_mode: bool = True,
 ) -> Assistant:
     """Get a Groq consolidate Assistant."""
