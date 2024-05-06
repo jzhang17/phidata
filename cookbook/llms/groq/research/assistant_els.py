@@ -78,11 +78,11 @@ def get_research_assistant(
             - **Distribution Networks:** Global distribution through major streaming services and theatrical releases
             - **Awards and Accolades:** Multiple [Golden Globe](https://www.goldenglobes.com) and [Emmy Awards](https://www.emmys.com)
             - **Other Members:**
-                - **CFO:** [Sarah Johnson](https://www.linkedin.com/in/sarahjohnson)
-                - **Chief Technology Officer (CTO):** [Michael Brown](https://www.linkedin.com/in/michaelbrown)
-                - **Marketing Director:** [Lisa Green](https://www.linkedin.com/in/lisagreen)
-                - **Head of Talent Relations:** [David Lee](https://www.linkedin.com/in/davidlee)
-            - **Website:** [XYZ Production](https://www.dynamicproductions.com)
+                - John Doe - Oversees all company operations and strategic direction. [LinkedIn Profile](https://www.linkedin.com/in/johndoe)
+                - Jane Smith - Manages financial strategies and budget planning. [LinkedIn Profile](https://www.linkedin.com/in/janesmith)
+                - Emily White - Leads creative teams and directs the artistic vision of projects. [LinkedIn Profile](https://www.linkedin.com/in/emilywhite)
+                - Michael Brown - Coordinates production activities, ensuring efficiency and quality control. [LinkedIn Profile](https://www.linkedin.com/in/michaelbrown)
+                - Lisa Green - Directs marketing strategies and brand partnerships. [LinkedIn Profile](https://www.linkedin.com/in/lisagreen)            - **Website:** [XYZ Production](https://www.dynamicproductions.com)
             - **Additional Information:** 
                 - Recognized for innovation in visual effects and narrative techniques
                 - Committed to fostering new talent in the entertainment industry
@@ -111,12 +111,13 @@ def get_followup_assistant(
             """
             #### Instructions:
             1. Read through the initial draft report carefully, identify key topics, and assess areas that are under-explored or lacking detailed information.
-            2. Develop a Python list containing four specific search queries:
-                - The first two queries should aim to gather comprehensive details about the main topic of the report.
-                - The next two queries should focus on collecting more information about key personnel, project or companies mentioned in the report that are lacking in detail.
+            2. Develop a Python list containing four specific search queries in sentences:
+                - The first two queries should aim to gather comprehensive details about the main project (movie or show) of the report.
+                - The next two queries should focus on collecting more information about key personnel or companies mentioned in the report that are lacking in detail.
+                - Include a query to search LinkedIn for a list of current employees at the company to understand staffing and key figures.
 
             ### Output Format:
-            Provide your search queries in the form of a Python list. Each query must be formulated clearly to ensure relevancy and depth in the search results.
+            Provide your search queries in the form of a Python list. Each query must be formulated clearly and precisely to ensure relevancy and depth in the search results.
             """
 
         ],
@@ -125,8 +126,8 @@ def get_followup_assistant(
             ```python
             [
                 "Detailed analysis of movie name's key personel, writers and producers",
-                "Career overview and of Jane Doe, producer/writer of 'ABC Film', including her notable projects",
-                "XYZ Production's team members, creative executives, coordinators, recent personnel changes according to linkedin",
+                "Career overview and of Jane Doe, producer/writer of ABC Film, including her notable projects",
+                "Search on LinkedIn for employees currently working at XYZ Production",
                 "Profile of John Smith focusing on his role in developing XYZ Production’ genre specialization and distribution networks as analyzed from industry reports and media articles."
             ]
             ```
