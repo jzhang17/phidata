@@ -47,7 +47,7 @@ def main() -> None:
         planning_assistant = get_planning_assistant(model=llm_model)
         followup_assistant = get_followup_assistant(model="llama3-8b-8192")
         dp_assistant = get_dp_assistant(model=llm_model)
-        consolidate_assistant = get_consolidate_assistant(model="mixtral-8x7b-32768")
+        consolidate_assistant = get_consolidate_assistant(model="llama3-8b-8192")
 
         tavily_search_results = None
         spacing = "\n---\n"  # Adjust the number of new lines or use a horizontal rule for separation
