@@ -34,6 +34,58 @@ def get_research_assistant(
         add_to_system_prompt=dedent(
             """
             <report_format>
+            #### Project Profile: ABC Film
+            - **Project Name:** ABC Film
+            - **Genre:** Adventure/Comedy
+            - **Director:** [Jane Doe](https://www.imdb.com/name/nmXXXXX)
+            - **Lead Actors:** [John Smith](https://www.imdb.com/name/nmXXXXX), [Emily White](https://www.imdb.com/name/nmXXXXX)
+            - **Production Status:** Pre-production
+            - **Budget:** $120 million
+            - **Box Office:** Projected $300 million
+            - **Distribution Details:** Released in theaters worldwide and available on [XYZ Streaming Service](https://www.xyzstreaming.com)
+            - **Notable Achievements:** Selected for the [upcoming international film festival](https://www.filmfestival.com). More details [here](https://www.imdb.com/title/tt1234567/)
+            - **Additional Information:** 
+                - Expected to significantly impact the adventure genre
+                - High anticipation from the audience, evidenced by [social media trends](https://twitter.com/hashtag/TheGreatAdventure)
+
+            #### Individual Profile: John Smith
+            - **Name:** John Smith
+            - **Role:** Director
+            - **Recent Projects:** [The Last Stand](https://www.imdb.com/title/ttXXXXX), [Night in the Jungle](https://www.imdb.com/title/ttXXXXX)
+            - **Notable Achievements:** Winner of the [Best Director at the 2022 Global Film Awards](https://globalfilmawards.com/past-winners)
+            - **Education and Training:** Graduated from the [American Film Institute](https://www.afi.com)
+            - **Awards and Nominations:** Multiple [Academy Award nominations](https://www.oscars.org/oscars/ceremonies/2022)
+            - **Professional Affiliations:** Member of the Directors Guild of America
+            - **Influence and Impact in the Industry:** Known for pioneering the use of virtual reality in film
+            - **Significant Collaborations:** Long-time collaboration with screenwriter [Emily White](https://www.imdb.com/name/nmXXXXX)
+            - **Agent or Representation:** Represented by Creative Artists Agency
+            - **Upcoming Projects:** Directing the upcoming film "[Future's Edge](https://www.imdb.com/title/ttXXXXX)"
+            - **Media Appearances:** Recently featured on "[The Tonight Show](https://www.nbc.com/the-tonight-show)"
+            - **IMDb Profile:** [John Smith](https://www.imdb.com/name/nm1234567/)
+            - **Additional Information:** 
+                - Known for a unique storytelling style
+                - Actively involved in mentoring young filmmakers
+
+            #### Company Profile: XYZ Production
+            - **Company Name:** XYZ Production
+            - **Industry:** Entertainment
+            - **Key Projects:** ABC Film, Tomorrow’s Dawn
+            - **Content Library:** Over 500 titles including award-winning films and series
+                - [Movie 1](https://www.imdb.com/title/ttXXXXX)
+                - [Movie 2](https://www.imdb.com/title/ttXXXXX)
+                - [Show 1](https://www.imdb.com/title/ttXXXXX)
+                - [Show 2](https://www.imdb.com/title/ttXXXXX)
+            - **Distribution Networks:** Global distribution through major streaming services and theatrical releases
+            - **Awards and Accolades:** Multiple [Golden Globe](https://www.goldenglobes.com) and [Emmy Awards](https://www.emmys.com)
+            - **Other Members:**
+                - John Doe - Oversees all company operations and strategic direction. [LinkedIn Profile](https://www.linkedin.com/in/johndoe)
+                - Jane Smith - Manages financial strategies and budget planning. [LinkedIn Profile](https://www.linkedin.com/in/janesmith)
+                - Emily White - Leads creative teams and directs the artistic vision of projects. [LinkedIn Profile](https://www.linkedin.com/in/emilywhite)
+                - Michael Brown - Coordinates production activities, ensuring efficiency and quality control. [LinkedIn Profile](https://www.linkedin.com/in/michaelbrown)
+                - Lisa Green - Directs marketing strategies and brand partnerships. [LinkedIn Profile](https://www.linkedin.com/in/lisagreen)            - **Website:** [XYZ Production](https://www.dynamicproductions.com)
+            - **Additional Information:** 
+                - Recognized for innovation in visual effects and narrative techniques
+                - Committed to fostering new talent in the entertainment industry
 
             """
 
@@ -97,14 +149,14 @@ def get_consolidate_assistant(
     return Assistant(
         name="groq_consolidate_assistant",
         llm=Groq(model=model),
-        description="As an experienced professional, your objective is to consolidate multiple project reports, team member profiles, and company overviews into one comprehensive document.",
+        description="As an experienced professional in the entertainment industry, your objective is to consolidate multiple project reports, team member profiles, and company overviews into one comprehensive document.",
         instructions=[
             """
-            ### Instructions:
-            1. **Review All Data**: Carefully examine the notes provided, ensuring no detail is overlooked.
+            #### Instructions:
+            1. **Review All Data**: Carefully examine the notes and data provided on projects, team members, and companies, ensuring no detail is overlooked.
             2. **Consolidate Information**: Merge all relevant information into one cohesive report. This includes combining duplicates and maintaining the original style of the content.
-            3. **Format Correctly**: Format financial figures, specifically those involving dollar amounts, using markdown format—for instance, write dollar amounts like `$100` instead of "100 dollars".
-            4. **Eliminate Redundant Data**: Remove any rows or entries labeled with phrases such as "not available," "not disclosed," "not specific," "not provided," or "no information."
+            3. **Format Correctly**: Ensure the final document is well formatted, maintaining a consistent style that's clear and easy to read.
+            4. **Eliminate Redundant Data**: Remove any redundant entries or information labeled as "not available," "not disclosed," "not specific," "not provided," or "no information."
 
             """
         ],
