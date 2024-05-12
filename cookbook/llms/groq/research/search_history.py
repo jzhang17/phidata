@@ -2,27 +2,42 @@ import streamlit as st
 import dropbox
 import os
 import hmac
+import boto3
+from botocore.client import Config
 
-# Initialize the Dropbox client
-dbx = dropbox.Dropbox(os.getenv("DROPBOX_ACCESS_TOKEN"))
 
-def get_text_files(path):
-    """Retrieve all text files from a specified Dropbox folder path."""
+# Initialize the S3 client for Cloudflare R2 storage
+endpoint_url = 'https://44ae5977e790e0a48e71df40637d166a.r2.cloudflarestorage.com/'
+access_key = os.getenv('CLOUDFLARE_ACCESS_KEY')
+secret_key = os.getenv('CLOUDFLARE_SECRET_KEY')
+bucket_name = 'newbizbot'  # Your hardcoded bucket name
+
+s3_client = boto3.client('s3',
+                         region_name='auto',
+                         endpoint_url=endpoint_url,
+                         aws_access_key_id=access_key,
+                         aws_secret_access_key=secret_key,
+                         config=Config(signature_version='s3v4'))
+
+def get_text_files(folder_path):
+    """Retrieve all text files from a specified folder in Cloudflare R2 Storage."""
     try:
-        files = dbx.files_list_folder(path).entries
-        return [f.name for f in files if isinstance(f, dropbox.files.FileMetadata) and f.name.endswith('.txt')]
-    except dropbox.exceptions.ApiError as e:
-        st.error("Failed to fetch files: {}".format(e))
+        response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=folder_path)
+        files = response.get('Contents', [])
+        return [item['Key'] for item in files if item['Key'].endswith('.txt')]
+    except s3_client.exceptions.ClientError as e:
+        print(f"Failed to fetch files: {e}")
         return []
 
-def read_file(path):
-    """Read the content of a text file from Dropbox."""
+def read_file(file_key):
+    """Read the content of a text file from Cloudflare R2 Storage."""
     try:
-        _, res = dbx.files_download(path)
-        return res.content.decode("utf-8")
-    except dropbox.exceptions.ApiError as e:
-        st.error("Failed to download file: {}".format(e))
+        response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        return response['Body'].read().decode('utf-8')
+    except s3_client.exceptions.ClientError as e:
+        print(f"Failed to download file: {e}")
         return ""
+
 
 def check_password():
     """Returns `True` if the user had the correct password."""

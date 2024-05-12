@@ -182,4 +182,5 @@ urllib3==2.2.1
 markdown
 mdx_truly_sane_lists
 streamlit-pills
-dropbox
+boto3
+botocore.client

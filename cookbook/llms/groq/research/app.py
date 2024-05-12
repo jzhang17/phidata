@@ -9,6 +9,9 @@ import re
 import time
 import dropbox
 from tenacity import retry, stop_after_attempt, wait_exponential
+import boto3
+from botocore.client import Config
+
 
 
 st.set_page_config(
@@ -21,46 +24,57 @@ st.title("JZ NewBizBot v3")
 def search_with_retry(input):
     return TavilyTools().web_search_using_tavily(input)
 
-def upload_file_to_dropbox(file_path, dropbox_path):
-    """Upload a file to Dropbox, checking for duplicates and modifying the path if necessary."""
-    # Access token from your Dropbox app
-    access_token = os.getenv('DROPBOX_ACCESS_TOKEN')
+def upload_file_to_cloudflare_r2(file_path, object_name):
+    """Upload a file to Cloudflare R2 Storage in the 'newbizbot' bucket, checking for duplicates and modifying the object name if necessary."""
+    # Use environment variables for Cloudflare API keys
+    access_key = os.getenv('CLOUDFLARE_ACCESS_KEY')
+    secret_key = os.getenv('CLOUDFLARE_SECRET_KEY')
 
-    # Create a Dropbox client
-    dbx = dropbox.Dropbox(access_token)
+    # Endpoint for Cloudflare R2 storage
+    endpoint_url = 'https://44ae5977e790e0a48e71df40637d166a.r2.cloudflarestorage.com/'
 
-    # Extract the file name from the file path
-    file_name = os.path.basename(file_path)
-    folder_path = os.path.dirname(dropbox_path)
+    # Hardcoded bucket name
+    bucket_name = 'newbizbot'
 
-    try:
-        # Define a method to generate a new file name with a number appended
-        def generate_new_filename(index):
-            base_name, extension = os.path.splitext(file_name)
-            return f"{base_name}_{index}{extension}"
+    # Create a client for the Cloudflare R2 storage
+    session = boto3.session.Session()
+    s3_client = session.client('s3',
+                               region_name='auto',
+                               endpoint_url=endpoint_url,
+                               aws_access_key_id=access_key,
+                               aws_secret_access_key=secret_key,
+                               config=Config(signature_version='s3v4'))
 
-        # Start checking for existing files and generate new file name if necessary
-        index = 1
-        new_file_name = file_name
-        while True:
-            search_result = dbx.files_search(folder_path, new_file_name)
-            if not search_result.matches:
-                break
-            new_file_name = generate_new_filename(index)
+    # Extract the file name and folder path from the object name
+    file_name = os.path.basename(object_name)
+    folder_path = os.path.dirname(object_name)
+
+    # Define a method to generate a new object name with a number appended
+    def generate_new_object_name(index):
+        base_name, extension = os.path.splitext(file_name)
+        return f"{base_name}_{index}{extension}"
+
+    # Start checking for existing files and generate new object name if necessary
+    index = 1
+    new_object_name = file_name
+    while True:
+        try:
+            s3_client.head_object(Bucket=bucket_name, Key=os.path.join(folder_path, new_object_name))
+            new_object_name = generate_new_object_name(index)
             index += 1
+        except s3_client.exceptions.ClientError as e:
+            if int(e.response['Error']['Code']) == 404:
+                break  # Object does not exist, and we can use this name
+            else:
+                raise  # Some other error, raise it
 
-        # Update the Dropbox path with the potentially new file name
-        dropbox_path = os.path.join(folder_path, new_file_name)
+    # Update the object name with the potentially new file name
+    object_name = os.path.join(folder_path, new_object_name)
 
-        with open(file_path, "rb") as file:
-            # Read the contents of the file
-            file_contents = file.read()
-            # Upload the file to Dropbox
-            dbx.files_upload(file_contents, dropbox_path, mode=dropbox.files.WriteMode.add)
-            print("File uploaded successfully")
-
-    except Exception as e:
-        print(f"Error: {e}")
+    # Upload the file
+    with open(file_path, "rb") as file:
+        s3_client.upload_fileobj(file, bucket_name, object_name)
+        print(f"File uploaded successfully to {object_name}")
 
 def main() -> None:
     # Get model
@@ -114,8 +128,8 @@ def main() -> None:
                     with open(file_path, 'w') as file:
                         file.write(tavily_search_results1)
                     with open(file_path, 'rb') as file:
-                        dropbox_path = f'/Apps/NewBizBot/{report_topic}_first_search.txt'
-                        upload_file_to_dropbox(file_path, dropbox_path)
+                        cloud_path = f'/Apps/NewBizBot/{report_topic}_first_search.txt'
+                        upload_file_to_cloudflare_r2(file_path, cloud_path)
             status.update(label= f"🔍 {report_topic} - Initial Search Results", state="complete", expanded=False)
 
 
@@ -131,8 +145,8 @@ def main() -> None:
                 with open(file_path, 'w') as file:
                     file.write(first_report)
                 with open(file_path, 'rb') as file:
-                    dropbox_path = f'/Apps/NewBizBot/{report_topic}_first_report.txt'
-                    upload_file_to_dropbox(file_path, dropbox_path)
+                    cloud_path = f'/Apps/NewBizBot/{report_topic}_first_report.txt'
+                    upload_file_to_cloudflare_r2(file_path, cloud_path)
             first_draft_status.update(label= f"📝 {report_topic} - First Draft Finished", state="complete", expanded=True)
 
         with st.status(f"🔍 {report_topic} - Follow-up Search", expanded=True) as status:
@@ -164,8 +178,8 @@ def main() -> None:
                     with open(file_path, 'w') as file:
                         file.write(tavily_search_results2)
                     with open(file_path, 'rb') as file:
-                        dropbox_path = f'/Apps/NewBizBot/{report_topic}_followup_search_result.txt'
-                        upload_file_to_dropbox(file_path, dropbox_path)
+                        cloud_path = f'/Apps/NewBizBot/{report_topic}_followup_search_result.txt'
+                        upload_file_to_cloudflare_r2(file_path, cloud_path)
             status.update(label= f"🔍 {report_topic} - Follow-up Search Results", state="complete", expanded=False)
         
         if not tavily_search_results2:
@@ -185,8 +199,8 @@ def main() -> None:
                 with open(file_path, 'w') as file:
                     file.write(followup_report)
                 with open(file_path, 'rb') as file:
-                    dropbox_path = f'/Apps/NewBizBot/{report_topic}_followup_report.txt'
-                    upload_file_to_dropbox(file_path, dropbox_path)
+                    cloud_path = f'/Apps/NewBizBot/{report_topic}_followup_report.txt'
+                    upload_file_to_cloudflare_r2(file_path, cloud_path)
 
          
             followup_status.update(label= f"📝 {report_topic} - Follow-up Report", state="complete", expanded=True)
@@ -208,8 +222,8 @@ def main() -> None:
                 with open(file_path, 'w') as file:
                     file.write(consolidate_report + spacing + dp_report)
                 with open(file_path, 'rb') as file:
-                    dropbox_path = f'/Apps/NewBizBot/{report_topic}_final_report.txt'
-                    upload_file_to_dropbox(file_path, dropbox_path)
+                    cloud_path = f'/Apps/NewBizBot/{report_topic}_final_report.txt'
+                    upload_file_to_cloudflare_r2(file_path, cloud_path)
 
                        
             status.update(label= f"📝 {report_topic} - Consolidated Report", state="complete", expanded=True)
