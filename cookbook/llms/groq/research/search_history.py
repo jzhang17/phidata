@@ -73,7 +73,7 @@ def main():
 
     # Get the list of text files
     file_names = get_text_files(folder_path)
-    selected_file = st.sidebar.selectbox("Select a file", file_names)
+    selected_file = st.sidebar.radio("Select a file", options=file_names)
 
     if selected_file:
         # Display the content of the selected file
