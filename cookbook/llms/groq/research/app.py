@@ -13,7 +13,6 @@ import boto3
 from botocore.client import Config
 
 
-
 st.set_page_config(
     page_title="JZ NewBizBot",
     page_icon="💰",
