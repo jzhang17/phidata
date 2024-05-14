@@ -1,6 +1,6 @@
 import streamlit as st
 from phi.tools.tavily import TavilyTools
-from assistant import get_research_assistant, get_planning_assistant, get_dp_assistant, get_followup_assistant, get_consolidate_assistant
+from assistant import get_research_assistant, get_planning_assistant, get_dp_assistant, get_followup_assistant, get_consolidate_assistant, get_research_assistant2
 import markdown
 from streamlit.components.v1 import html
 from streamlit_pills import pills
@@ -112,32 +112,11 @@ def main() -> None:
         tavily_search_results = None
         spacing = "\n---\n"  # Adjust the number of new lines or use a horizontal rule for separation
 
-        with st.status(f"🔍 {report_topic} - Initial Search", expanded=True) as status:
-            with st.container():
-                tavily_container = st.empty()
-                tavily_search_results1 = ""
-                try:
-                    tavily_search_results1 += search_with_retry(report_topic)
-                except Exception as e:  # Catch any exceptions during retries
-                    print(f"Error after retries: {e}") 
-                
-                if tavily_search_results1:
-                    tavily_container.markdown(tavily_search_results1)
-                    file_path = f'/tmp/{report_topic}_first_search.txt'
-                    with open(file_path, 'w') as file:
-                        file.write(tavily_search_results1)
-                    with open(file_path, 'rb') as file:
-                        cloud_path = f'/Apps/NewBizBot/{report_topic}_first_search.txt'
-                        upload_file_to_cloudflare_r2(file_path, cloud_path)
-            status.update(label= f"🔍 {report_topic} - Initial Search Results", state="complete", expanded=False)
-
-
-
         with st.status(f"📝 {report_topic} - Generating First Draft", expanded=True) as first_draft_status:
             with st.container():
                 first_report = ""
                 first_report_container = st.empty()
-                for delta in research_assistant.run(tavily_search_results1):
+                for delta in get_research_assistant2(report_topic):
                     first_report += delta  # type: ignore
                     first_report_container.markdown(first_report)
                 file_path = f'/tmp/{report_topic}_first_report.txt'
