@@ -5,7 +5,6 @@ from typing import Annotated, List, Tuple, Union
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.tools import tool
 from langchain_experimental.tools import PythonREPLTool
-import matplotlib.pyplot as plt
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.tools import tool
