@@ -3,7 +3,6 @@ from phi.tools.tavily import TavilyTools
 from assistant import get_research_assistant, get_planning_assistant, get_dp_assistant, get_followup_assistant, get_consolidate_assistant
 import markdown
 from streamlit.components.v1 import html
-from streamlit_pills import pills
 import os
 import re
 import time
