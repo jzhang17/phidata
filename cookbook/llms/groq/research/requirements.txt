@@ -183,7 +183,7 @@ markdown
 mdx_truly_sane_lists
 boto3
 langchain-community==0.0.38
-langchain-core==0.1
+langchain-core==0.1.52
 langchain-experimental
 langsmith
 langchain-openai
