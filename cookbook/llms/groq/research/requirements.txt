@@ -183,3 +183,9 @@ markdown
 mdx_truly_sane_lists
 streamlit-pills
 boto3
+langchain-community
+langchain-core
+langchain-experimental
+matplotlib
+langsmith
+langchain-openai
