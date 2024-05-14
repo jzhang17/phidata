@@ -11,6 +11,12 @@ from langchain_core.tools import tool
 from langsmith import trace
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents.format_scratchpad.openai_tools import (
+    format_to_openai_tool_messages,
+)
+from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputParser
+from langchain.agents import AgentExecutor
+
 
 tavily_tool = TavilySearchResults(max_results=5)
 
@@ -110,11 +116,6 @@ prompt = ChatPromptTemplate.from_messages(
 
 llm_with_tools = llm.bind_tools(tools)
 
-from langchain.agents.format_scratchpad.openai_tools import (
-    format_to_openai_tool_messages,
-)
-from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputParser
-
 agent = (
     {
         "input": lambda x: x["input"],
@@ -126,8 +127,6 @@ agent = (
     | llm_with_tools
     | OpenAIToolsAgentOutputParser()
 )
-
-from langchain.agents import AgentExecutor
 
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 

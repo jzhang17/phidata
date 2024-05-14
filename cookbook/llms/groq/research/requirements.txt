@@ -181,10 +181,9 @@ urllib3==2.2.1
     # via requests
 markdown
 mdx_truly_sane_lists
-streamlit-pills
 boto3
-langchain-community
-langchain-core
+langchain-community==0.0.38
+langchain-core==0.1
 langchain-experimental
 langsmith
 langchain-openai
