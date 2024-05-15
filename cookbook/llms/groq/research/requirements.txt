@@ -187,3 +187,4 @@ langchain-core==0.1.52
 langchain-experimental
 langsmith
 langchain-openai
+beautifulsoup4
