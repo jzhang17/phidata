@@ -234,8 +234,8 @@ if with_clear_container(submit_clicked):
     output_container = output_container.container()
     output_container.chat_message("user").write(user_input)
 
-    answer_container = st.code(output_container.chat_message("assistant", avatar="💰"), language='python')
-    st_callback = get_streamlit_cb(answer_container)
+    answer_container = output_container.chat_message("assistant", avatar="💰")
+    st_callback = get_streamlit_cb(st.code(answer_container, language='python'))
     cfg = RunnableConfig()
     cfg["callbacks"] = [st_callback]
 
