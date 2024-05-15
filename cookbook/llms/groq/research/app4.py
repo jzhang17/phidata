@@ -28,6 +28,7 @@ from langchain_community.document_loaders import WebBaseLoader
 from typing import Callable, TypeVar
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
 from streamlit.delta_generator import DeltaGenerator
+import inspect
 
 
 st.set_page_config(
