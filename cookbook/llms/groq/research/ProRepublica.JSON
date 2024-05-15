@@ -1,0 +1,428 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "version": "v2.0.0",
+      "title": "ProPublica Nonprofit Explorer API",
+      "description": "This API provides access to the search engine and database that powers Nonprofit Explorer."
+    },
+    "servers": [
+      {
+        "url": "https://projects.propublica.org/nonprofits/api/v2"
+      }
+    ],
+    "tags": [
+      {
+        "name": "search",
+        "description": "Endpoints for searching nonprofit organizations."
+      },
+      {
+        "name": "organization",
+        "description": "Endpoints for retrieving detailed organization information."
+      }
+    ],
+    "paths": {
+      "/search.json": {
+        "get": {
+          "tags": ["search"],
+          "summary": "Search for organizations",
+          "description": "Returns a list of organizations matching the given search terms.",
+          "operationId": "searchOrganizations",
+          "parameters": [
+            {
+              "name": "q",
+              "in": "query",
+              "description": "A keyword search string.",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "page",
+              "in": "query",
+              "description": "Zero-indexed page number of the request. Default is 0.",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "default": 0
+              }
+            },
+            {
+              "name": "state[id]",
+              "in": "query",
+              "description": "Two-letter U.S. Postal Service abbreviation for filtering by state.",
+              "required": false,
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "ntee[id]",
+              "in": "query",
+              "description": "Integer (1-10) for filtering by National Taxonomy of Exempt Entities (NTEE) Major Group.",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+              }
+            },
+            {
+              "name": "c_code[id]",
+              "in": "query",
+              "description": "Integer for filtering by subsection of section 501(c) of the tax code.",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "enum": [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 28, 92]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "A list of organizations matching the search criteria.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "total_results": {
+                        "type": "integer"
+                      },
+                      "num_pages": {
+                        "type": "integer"
+                      },
+                      "cur_page": {
+                        "type": "integer"
+                      },
+                      "per_page": {
+                        "type": "integer"
+                      },
+                      "page_offset": {
+                        "type": "integer"
+                      },
+                      "search_query": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "selected_state": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "selected_ntee": {
+                        "type": "integer",
+                        "nullable": true
+                      },
+                      "selected_code": {
+                        "type": "integer",
+                        "nullable": true
+                      },
+                      "data_source": {
+                        "type": "string"
+                      },
+                      "api_version": {
+                        "type": "integer"
+                      },
+                      "organizations": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Organization"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/organizations/{ein}.json": {
+        "get": {
+          "tags": ["organization"],
+          "summary": "Get organization details",
+          "description": "Returns all available data for a given organization by its EIN.",
+          "operationId": "getOrganizationDetails",
+          "parameters": [
+            {
+              "name": "ein",
+              "in": "path",
+              "description": "The EIN of the organization.",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Detailed information about the organization.",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "organization": {
+                        "$ref": "#/components/schemas/OrganizationDetail"
+                      },
+                      "data_source": {
+                        "type": "string"
+                      },
+                      "api_version": {
+                        "type": "integer"
+                      },
+                      "filings_with_data": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Filing"
+                        }
+                      },
+                      "filings_without_data": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/FilingWithoutData"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Organization": {
+          "type": "object",
+          "properties": {
+            "ein": {
+              "type": "integer"
+            },
+            "strein": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "sub_name": {
+              "type": "string",
+              "nullable": true
+            },
+            "city": {
+              "type": "string",
+              "nullable": true
+            },
+            "state": {
+              "type": "string",
+              "nullable": true
+            },
+            "ntee_code": {
+              "type": "string",
+              "nullable": true
+            },
+            "raw_ntee_code": {
+              "type": "string",
+              "nullable": true
+            },
+            "subseccd": {
+              "type": "integer"
+            },
+            "has_subseccd": {
+              "type": "boolean"
+            },
+            "have_filings": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "have_extracts": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "have_pdfs": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "score": {
+              "type": "number"
+            }
+          }
+        },
+        "OrganizationDetail": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer"
+            },
+            "ein": {
+              "type": "integer"
+            },
+            "name": {
+              "type": "string"
+            },
+            "careofname": {
+              "type": "string",
+              "nullable": true
+            },
+            "address": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            },
+            "zipcode": {
+              "type": "string"
+            },
+            "exemption_number": {
+              "type": "integer"
+            },
+            "subsection_code": {
+              "type": "integer"
+            },
+            "affiliation_code": {
+              "type": "integer"
+            },
+            "classification_codes": {
+              "type": "string"
+            },
+            "ruling_date": {
+              "type": "string",
+              "format": "date"
+            },
+            "deductibility_code": {
+              "type": "integer"
+            },
+            "foundation_code": {
+              "type": "integer"
+            },
+            "activity_codes": {
+              "type": "string"
+            },
+            "organization_code": {
+              "type": "integer"
+            },
+            "exempt_organization_status_code": {
+              "type": "integer"
+            },
+            "tax_period": {
+              "type": "string"
+            },
+            "asset_code": {
+              "type": "integer"
+            },
+            "income_code": {
+              "type": "integer"
+            },
+            "filing_requirement_code": {
+              "type": "integer"
+            },
+            "pf_filing_requirement_code": {
+              "type": "integer"
+            },
+            "accounting_period": {
+              "type": "integer"
+            },
+            "asset_amount": {
+              "type": "number"
+            },
+            "income_amount": {
+              "type": "number"
+            },
+            "revenue_amount": {
+              "type": "number"
+            },
+            "ntee_code": {
+              "type": "string"
+            },
+            "sort_name": {
+              "type": "string",
+              "nullable": true
+            },
+            "created_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "updated_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "data_source": {
+              "type": "string"
+            },
+            "have_extracts": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "have_pdfs": {
+              "type": "boolean",
+              "nullable": true
+            },
+            "latest_object_id": {
+              "type": "string"
+            }
+          }
+        },
+        "Filing": {
+          "type": "object",
+          "properties": {
+            "tax_prd": {
+              "type": "integer"
+            },
+            "tax_prd_yr": {
+              "type": "integer"
+            },
+            "formtype": {
+              "type": "integer"
+            },
+            "pdf_url": {
+              "type": "string",
+              "nullable": true
+            },
+            "updated": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "totrevenue": {
+              "type": "number"
+            },
+            "totfuncexpns": {
+              "type": "number"
+            },
+            "totassetsend": {
+              "type": "number"
+            },
+            "totliabend": {
+              "type": "number"
+            },
+            "pct_compnsatncurrofcr": {
+              "type": "number"
+            }
+          }
+        },
+        "FilingWithoutData": {
+          "type": "object",
+          "properties": {
+            "tax_prd": {
+              "type": "integer"
+            },
+            "tax_prd_yr": {
+              "type": "integer"
+            },
+            "formtype": {
+              "type": "integer"
+            },
+            "formtype_str": {
+              "type": "string"
+            },
+            "pdf_url": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+  
