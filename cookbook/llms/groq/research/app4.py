@@ -196,11 +196,14 @@ def upload_file_to_cloudflare_r2(file_path, object_name):
         s3_client.upload_fileobj(file, bucket_name, object_name)
         print(f"File uploaded successfully to {object_name}")
 
+query_params = st.query_params
+input_value = query_params.get('input', 'Bill Gates')
+
 with st.form(key="form"):
     user_input = ""
 
     if not user_input:
-        user_input = st.text_input("Enter the name of a prospect or intermediary, can be a person, company or non-profit:", value="Bill Gates")
+        user_input = st.text_input("Enter the name of a prospect or intermediary, can be a person, company or non-profit:", value=input_value)
     submit_clicked = st.form_submit_button("Generate Report")
 
 output_container = st.empty()
