@@ -25,6 +25,10 @@ from langchain.agents.output_parsers.openai_tools import OpenAIToolsAgentOutputP
 from langchain.agents import AgentExecutor
 from langchain_core.tools import tool
 from langchain_community.document_loaders import WebBaseLoader
+from typing import Callable, TypeVar
+from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
+from streamlit.delta_generator import DeltaGenerator
+
 
 st.set_page_config(
     page_title="JZ NewBizBot #4",
@@ -45,6 +49,24 @@ def scrape_webpages(urls: List[str]) -> str:
             for doc in docs
         ]
     )
+
+T = TypeVar('T')
+
+def get_streamlit_cb(parent_container: DeltaGenerator):
+    def decor(fn: Callable[..., T]) -> Callable[..., T]:
+        ctx = get_script_run_ctx()
+        def wrapper(*args, **kwargs) -> T:
+            add_script_run_ctx(ctx=ctx)
+            return fn(*args, **kwargs)
+        return wrapper
+
+    st_cb = StreamlitCallbackHandler(parent_container=parent_container)
+
+    for name, fn in inspect.getmembers(st_cb, predicate=inspect.ismethod):
+        if name.startswith('on_'):
+            setattr(st_cb, name, decor(fn))
+
+    return st_cb
 
 llm = ChatOpenAI(model="gpt-4o")
 tools = [tavily_tool, scrape_webpages]
@@ -212,7 +234,7 @@ if with_clear_container(submit_clicked):
     output_container.chat_message("user").write(user_input)
 
     answer_container = output_container.chat_message("assistant", avatar="💰")
-    st_callback = StreamlitCallbackHandler(answer_container)
+    st_callback = get_streamlit_cb(answer_container)
     cfg = RunnableConfig()
     cfg["callbacks"] = [st_callback]
 
