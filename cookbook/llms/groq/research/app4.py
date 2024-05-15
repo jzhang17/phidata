@@ -116,7 +116,6 @@ prompt = ChatPromptTemplate.from_messages(
                 - Current Valuation: `$50 million
                 - Annual Revenue: `$10 million, demonstrating robust growth in the tech sector
                 - Annual Profit: `$1 million, highlighting effective cost management and business operations
-            - **Strategic Goals:** Aiming to expand market reach through the development of new technologies and strategic partnerships
             - **Recent News:** Innovative Tech Solutions has been awarded a patent for a groundbreaking AI algorithm that optimizes energy usage in large-scale manufacturing, as reported last month by Forbes. More details [here](https://www.forbes.com).
             - **Additional Information:** 
                 - Committed to sustainability, investing in green technologies
