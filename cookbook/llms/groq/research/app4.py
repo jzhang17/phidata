@@ -29,6 +29,9 @@ from typing import Callable, TypeVar
 from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
 from streamlit.delta_generator import DeltaGenerator
 import inspect
+from langchain_community.document_loaders import PyPDFLoader
+import requests
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
 st.set_page_config(
@@ -51,6 +54,117 @@ def scrape_webpages(urls: List[str]) -> str:
         ]
     )
 
+@tool
+def nonprofit_financials(nonprofit_name):
+    """Get only structured financial data for nonprofits from prorebulica"""
+
+    
+    base_url = "https://projects.propublica.org/nonprofits/api/v2"
+    
+    # Step 1: Search for the nonprofit by name to get the EIN
+    search_url = f"{base_url}/search.json"
+    params = {'q': nonprofit_name}
+    search_response = requests.get(search_url, params=params)
+    
+    if search_response.status_code != 200:
+        return f"**Error searching for nonprofit:** {search_response.status_code}"
+    
+    search_results = search_response.json()
+    if not search_results['organizations']:
+        return f"**No nonprofit found with the name {nonprofit_name}**"
+    
+    # Get the EIN of the first matching organization
+    ein = search_results['organizations'][0]['ein']
+    
+    # Step 2: Use the EIN to get the organization overview
+    organization_url = f"{base_url}/organizations/{ein}.json"
+    organization_response = requests.get(organization_url)
+    
+    if organization_response.status_code != 200:
+        return f"**Error retrieving organization data:** {organization_response.status_code}"
+    
+    organization_data = organization_response.json().get('organization', {})
+    
+    # Find the most recent filing with data
+    filings = organization_response.json().get('filings_with_data', [])
+    
+    # Check if there are filings
+    latest_filing = filings[0] if filings else None
+    
+    def format_dollar(amount):
+        return f"${amount:,.0f}" if amount is not None else "None"
+    
+    # Create an overview of the organization
+    overview = {
+        'organization': {
+            'ID': organization_data.get('id'),
+            'EIN': organization_data.get('ein'),
+            'Name': organization_data.get('name'),
+            'Address': organization_data.get('address'),
+            'City': organization_data.get('city'),
+            'State': organization_data.get('state'),
+            'Zipcode': organization_data.get('zipcode'),
+            'Tax Period': organization_data.get('tax_period'),
+            'Total Assets': format_dollar(organization_data.get('asset_amount')),
+            'Total Income': format_dollar(organization_data.get('income_amount')),
+            'Total Revenue': format_dollar(organization_data.get('revenue_amount')),
+            'Updated At': organization_data.get('updated_at'),
+            'Data Source': organization_data.get('data_source')
+        },
+        'latest_filing': {
+            'Tax Period': latest_filing.get('tax_prd') if latest_filing else None,
+            'Tax Period Year': latest_filing.get('tax_prd_yr') if latest_filing else None,
+            'PDF URL': latest_filing.get('pdf_url') if latest_filing else None,
+            'Updated': latest_filing.get('updated') if latest_filing else None,
+            'Total Revenue': format_dollar(latest_filing.get('totrevenue')) if latest_filing else None,
+            'Total Functional Expenses': format_dollar(latest_filing.get('totfuncexpns')) if latest_filing else None,
+            'Total Assets at End of Year': format_dollar(latest_filing.get('totassetsend')) if latest_filing else None,
+            'Total Liabilities at End of Year': format_dollar(latest_filing.get('totliabend')) if latest_filing else None,
+            'Compensation of Current Officers': format_dollar(latest_filing.get('compnsatncurrofcr')) if latest_filing else None,
+            'Other Salaries and Wages': format_dollar(latest_filing.get('othrsalwages')) if latest_filing else None,
+            'Total Net Assets at End of Year': format_dollar(latest_filing.get('totnetassetend')) if latest_filing else None,
+            'Investment Income': format_dollar(latest_filing.get('invstmntinc')) if latest_filing else None
+        }
+    }
+    
+    # Generate markdown output
+    markdown = f"#### Nonprofit Financials: {overview['organization']['Name']}\n\n"
+    
+    markdown += "#### Organization Details\n"
+    for key, value in overview['organization'].items():
+        markdown += f"- **{key.replace('_', ' ')}:** {value}\n"
+    
+    markdown += "\n#### Latest Filing Details\n"
+    for key, value in overview['latest_filing'].items():
+        markdown += f"- **{key.replace('_', ' ')}:** {value}\n"
+    
+    return markdown
+    
+
+@tool
+def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> List[str]:
+    """Load a PDF file and return its content as a list of strings."""
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+    
+    # Download the PDF with headers
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        with open(local_path, 'wb') as file:
+            file.write(response.content)
+    else:
+        raise ValueError(f"Failed to download file: status code {response.status_code}")
+    
+    loader = PyPDFLoader(local_path)
+    docs = loader.load()
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    texts = text_splitter.split_documents(docs)
+    
+    # Print the chunks
+    for chunk in texts:
+        return chunk
+
+
+
 T = TypeVar('T')
 
 def get_streamlit_cb(parent_container: DeltaGenerator):
@@ -70,12 +184,12 @@ def get_streamlit_cb(parent_container: DeltaGenerator):
     return st_cb
 
 llm = ChatOpenAI(model="gpt-4o")
-tools = [tavily_tool, scrape_webpages]
+tools = [tavily_tool, scrape_webpages,load_pdf,nonprofit_financials]
 
 prompt = ChatPromptTemplate.from_messages(
     [
         (
-            "system",
+        "system",
         """
         ### Prompt Instruction:
         You are an expert in wealth and investment management, specializing in developing comprehensive client profiles across various sectors. Your task is to create detailed financial profiles of potential clients without strategizing. Utilize your expertise to produce informative profiles that will aid in crafting personalized financial management plans later. Include hyperlinks to essential financial data sources like Bloomberg, Forbes, and specific financial databases for additional context.
