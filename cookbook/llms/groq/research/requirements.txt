@@ -182,7 +182,7 @@ urllib3==2.2.1
 markdown
 mdx_truly_sane_lists
 boto3
-langchain-community==0.0.38
+langchain-community==0.2.0
 langchain-core==0.1.52
 langchain-experimental==0.0.59
 langsmith==0.1.59
