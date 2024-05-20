@@ -189,4 +189,4 @@ langchain-experimental==0.0.59
 langsmith==0.1.59
 langchain-openai==0.1.7
 beautifulsoup4
-crewai==0.30.11
+crewai
