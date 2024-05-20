@@ -163,7 +163,7 @@ toolz==0.12.1
     # via altair
 tornado==6.4
     # via streamlit
-typer==0.12.3
+typer==0.9.0
     # via phidata
 typing-extensions==4.11.0
     # via
