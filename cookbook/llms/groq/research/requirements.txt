@@ -190,4 +190,3 @@ langsmith==0.1.59
 langchain-openai==0.0.5
 beautifulsoup4
 crewai==0.28.8
-sqlite3==3.35.0
