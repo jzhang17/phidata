@@ -191,3 +191,4 @@ langchain-openai==0.0.5
 beautifulsoup4
 crewai==0.30.11
 embedchain==0.1.103
+pysqlite
