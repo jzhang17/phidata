@@ -187,6 +187,6 @@ langchain-community==0.0.38
 langchain-core==0.1.52
 langchain-experimental==0.0.58
 langsmith==0.1.59
-langchain-openai==0.1.7
+langchain-openai==0.0.5
 beautifulsoup4
 crewai==0.28.8
