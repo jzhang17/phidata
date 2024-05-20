@@ -182,11 +182,11 @@ urllib3==2.2.1
 markdown
 mdx_truly_sane_lists
 boto3
-langchain
+langchain==0.2.0
 langchain-community==0.2.0
 langchain-core==0.2.0
 langchain-experimental==0.0.59
 langsmith==0.1.59
 langchain-openai==0.1.7
 beautifulsoup4
-crewai
+crewai==0.30.11
