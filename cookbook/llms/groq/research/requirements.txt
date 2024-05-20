@@ -108,7 +108,7 @@ pygments==2.17.2
     # via rich
 python-dateutil==2.9.0.post0
     # via pandas
-python-dotenv==1.0.1
+python-dotenv==1.0.0
     # via
     #   phidata
     #   pydantic-settings
