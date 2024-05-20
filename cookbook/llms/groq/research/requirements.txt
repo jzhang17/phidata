@@ -153,7 +153,7 @@ tavily-python==0.3.3
     # via -r cookbook/llms/groq/research/requirements.in
 tenacity==8.2.3
     # via streamlit
-tiktoken==0.6.0
+tiktoken==0.1.1
     # via tavily-python
 toml==0.10.2
     # via streamlit
