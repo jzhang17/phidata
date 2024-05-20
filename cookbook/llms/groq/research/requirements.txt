@@ -188,3 +188,4 @@ langchain-experimental
 langsmith
 langchain-openai
 beautifulsoup4
+crewai

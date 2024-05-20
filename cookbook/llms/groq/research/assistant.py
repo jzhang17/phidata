@@ -281,7 +281,7 @@ def get_planning_assistant(
 
 def get_dp_assistant(
     model: str = "llama3-70b-8192",
-    debug_mode: bool = True,
+    debug_mode: bool = False,
 ) -> Assistant:
     """Get a Groq DP Assistant."""
 
