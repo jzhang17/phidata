@@ -184,7 +184,7 @@ mdx_truly_sane_lists
 boto3
 langchain==0.1.10
 langchain-community==0.0.38
-langchain-core==0.2.0
+langchain-core==0.1.52
 langchain-experimental==0.0.59
 langsmith==0.1.59
 langchain-openai==0.1.7
