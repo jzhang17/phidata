@@ -362,30 +362,28 @@ class StreamToExpander:
             self.current_expander = st.expander(f"Starting Search")
             self.expanders.append(self.current_expander)
 
-        # Check if the data is a JSON search result
-        if "Action: tavily_search_results_json Action Input:" in cleaned_data:
-            json_data_start = cleaned_data.find("[{'url':")
-            if json_data_start != -1:
-                search_results_json = cleaned_data[json_data_start:]
-                search_results = eval(search_results_json)
-                self.display_search_results(search_results, expanded=True)
+        # Detect and format JSON-like content for display in markdown text 
+        if "[{'url': " in cleaned_data and "'}]" in cleaned_data:
+            json_start = cleaned_data.find("[{'url': ")
+            json_end = cleaned_data.find("'}]") + 3
+            json_content = cleaned_data[json_start:json_end]
+            try:
+                parsed_json = json.loads(json_content.replace("'", '"'))
+                formatted_json = json.dumps(parsed_json, indent=4)
+                # Convert formatted JSON to readable markdown
+                markdown_content = "### Search Results:\n\n"
+                for item in parsed_json:
+                    markdown_content += f"- **Content:** {item['content']}"
+                    markdown_content += f"  **Read More:** {item['url']}\n\n"
+                self.current_expander.markdown(markdown_content)
+            except json.JSONDecodeError:
+                self.buffer.append(cleaned_data)
         else:
             self.buffer.append(cleaned_data)
-            if "\n" in data:
-                self.current_expander.markdown(''.join(self.buffer), unsafe_allow_html=True)
-                self.buffer = []
 
-    def display_search_results(self, search_results):
-        if self.current_expander is None:
-            self.current_expander = st.expander(f"Search Results")
-            self.expanders.append(self.current_expander)
-        
-        self.current_expander.write("Search results:")
-        for result in search_results:
-            with self.current_expander.container():
-                st.markdown(f"### [{result['url']}]({result['url']})")
-                st.write(result['content'])
-
+        if "\n" in data:
+            self.current_expander.markdown(''.join(self.buffer), unsafe_allow_html=True)
+            self.buffer = []
 
     def flush(self):
         pass  # No operation for flushing needed
