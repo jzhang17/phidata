@@ -59,13 +59,6 @@ avators = {"Researcher":"🔍",
 def tavily_tool(self, query: str, max_results: int = 5, format="markdown") -> str:
     """Use this function to search the web for a given query.
     This function uses the Tavily API to provide realtime online information about the query.
-
-    Args:
-        query (str): Query to search for.
-        max_results (int): Maximum number of results to return. Defaults to 5.
-
-    Returns:
-        str: JSON string of results related to the query.
     """
 
     response = self.client.search(
