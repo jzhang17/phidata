@@ -364,8 +364,8 @@ class StreamToExpander:
 
         self.expanders.append(self.current_expander)
         # Detect and format JSON-like content for display in markdown text 
-        if "[{'url':" in cleaned_data and "}]" in cleaned_data:
-            json_start = cleaned_data.find("[{'url':")
+        if "[{" in cleaned_data and "}]" in cleaned_data:
+            json_start = cleaned_data.find("[{")
             json_end = cleaned_data.find("}]") + 2
             json_content = cleaned_data[json_start:json_end]
             try:
