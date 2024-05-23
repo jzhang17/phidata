@@ -363,7 +363,7 @@ class StreamToExpander:
             self.expanders.append(self.current_expander)
 
         # Extract JSON-like string from the large text block
-        match = re.search(r'\[\{.*\}\]', large_text_block, re.DOTALL)
+        match = re.search(r'\[\{.*\}\]', cleaned_data, re.DOTALL)
         if match:
             json_str = match.group(0)
             data = json.loads(json_str.replace("'", "\""))
