@@ -57,7 +57,7 @@ avators = {"Researcher":"🔍",
             }
 
 @tool 
-def tavily_tool(self, query: str, max_results: int = 5) -> str:
+def tavily_tool(query: str, max_results: int = 5) -> str:
     """
     Use this function to search the web for a given query.
     This function uses the Tavily API to provide real-time online information about the query.
