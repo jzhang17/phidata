@@ -60,40 +60,42 @@ avators = {"Researcher":"🔍",
 def tavily_tool(self, query: str, max_results: int = 5) -> str:
     """
     Use this function to search the web for a given query.
-    This function uses the Tavily API to provide realtime online information about the query.
-
-    Args:
-        query (str): Query to search for.
-        max_results (int): Maximum number of results to return. Defaults to 5.
-
-    Returns:
-        str: JSON string of results related to the query.
+    This function uses the Tavily API to provide real-time online information about the query.
     """
+
     response = self.client.search(
         query=query, search_depth=self.search_depth, include_answer=self.include_answer, max_results=max_results
     )
 
-    clean_response = [dict(title=r["title"],
-                           url=r["url"],
-                           contents=r["contents"],
-                           score=r["score"]) for r in response.get("results", [])]
+    clean_response = []
+    for result in response.get("results", []):
+        clean_response.append({
+            "title": result["title"],
+            "url": result["url"],
+            "content": result["content"],
+            "score": result["score"],
+        })
 
     current_token_count = len(json.dumps(clean_response))
-    if current_token_count > self.max_tokens:
-        clean_response = clean_response[:self.max_tokens]
+    clean_results = clean_response
+    while current_token_count > self.max_tokens:
+        clean_results.pop()
+        current_token_count = len(json.dumps(clean_results))
 
+    self.format = "json"
     if not clean_response:
-        return "No results found."
+        return json.dumps({"results": "No results found."})
 
-    # Format the results as Markdown
-    markdown_results = "# Search Results\n"
-    for result in clean_response:
-        markdown_results += f"## {result['title']}\n"
-        markdown_results += f"[Link]({result['url']})\n\n"
-        markdown_results += f"{result['contents']}\n\n"
-        markdown_results += f"**Score:** {result['score']}\n\n"
-    
-    return markdown_results
+    # Format the results in markdown
+    markdown = []
+    for result in clean_results:
+        markdown.append(f"### {result['title']}\n")
+        markdown.append(f"[Link]({result['url']})\n")
+        markdown.append(f"{result['content']}\n")
+        markdown.append(f"**Score**: {result['score']}\n")
+
+    return "\n".join(markdown)
+
 
 
 @tool
