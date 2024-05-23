@@ -376,8 +376,8 @@ class StreamToExpander:
                 content = entry['content']
                 markdown_output += f"[{url}]({url})\n\n{content}\n\n"
                 self.current_expander.markdown(markdown_output)
-            except json.JSONDecodeError:
-                self.buffer.append(cleaned_data)
+        except json.JSONDecodeError:
+            self.buffer.append(cleaned_data)
         else:
             self.buffer.append(cleaned_data)
 
