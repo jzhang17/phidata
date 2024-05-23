@@ -56,46 +56,11 @@ avators = {"Researcher":"🔍",
 
             }
 @tool
-def tavily_tool(self, query: str, max_results: int = 5, format="markdown") -> str:
+def Search_Web(report_topic, max_results: int = 5, format="markdown"):
     """Use this function to search the web for a given query.
     This function uses the Tavily API to provide realtime online information about the query.
     """
-
-    response = self.client.search(
-        query=query, search_depth=self.search_depth, include_answer=self.include_answer, max_results=max_results
-    )
-
-    clean_response: Dict[str, Any] = {"query": query}
-    if "answer" in response:
-        clean_response["answer"] = response["answer"]
-
-    clean_results = []
-    current_token_count = len(json.dumps(clean_response))
-    for result in response.get("results", []):
-        _result = {
-            "title": result["title"],
-            "url": result["url"],
-            "content": result["content"],
-            "score": result["score"],
-        }
-        current_token_count += len(json.dumps(_result))
-        if current_token_count > self.max_tokens:
-            break
-        clean_results.append(_result)
-    clean_response["results"] = clean_results
-
-    if self.format == "json":
-        return json.dumps(clean_response) if clean_response else "No results found."
-    elif self.format == "markdown":
-        _markdown = ""
-        _markdown += f"#### {query}\n\n"
-        if "answer" in clean_response:
-            _markdown += "#### Summary\n"
-            _markdown += f"{clean_response.get('answer')}\n\n"
-        for result in clean_response["results"]:
-            _markdown += f"#### [{result['title']}]({result['url']})\n"
-            _markdown += f"{result['content']}\n\n"
-        return _markdown
+    TavilyTools().web_search_using_tavily(report_topic)
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
@@ -248,7 +213,7 @@ Researcher = Agent(
         3. **For a Company**: Create thorough profiles for top executives, pinpoint primary investors, record significant financial milestones, and evaluate the company's financial health using metrics like valuation, revenue, and profitability. Link to resources such as [Yahoo Finance](https://finance.yahoo.com/) or the company website for financial reports and analyses.
 
         ''',
-    tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # This can be optionally specified; defaults to an empty list
+    tools=[Search_Web,scrape_webpages,load_pdf,nonprofit_financials],  # This can be optionally specified; defaults to an empty list
     llm=llm,
     verbose=True
     )
