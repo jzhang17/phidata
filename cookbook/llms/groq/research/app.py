@@ -60,7 +60,7 @@ def Search_Web(report_topic, max_results: int = 5, format="markdown"):
     """Use this function to search the web for a given query.
     This function uses the Tavily API to provide realtime online information about the query.
     """
-    TavilyTools().web_search_using_tavily(report_topic)
+    return TavilyTools().web_search_using_tavily(report_topic)
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
