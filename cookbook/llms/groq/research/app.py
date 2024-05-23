@@ -56,9 +56,10 @@ avators = {"Researcher":"🔍",
 
             }
 
-@tool
+@tool 
 def tavily_tool(self, query: str, max_results: int = 5) -> str:
-    """Use this function to search the web for a given query.
+    """
+    Use this function to search the web for a given query.
     This function uses the Tavily API to provide realtime online information about the query.
 
     Args:
@@ -68,38 +69,32 @@ def tavily_tool(self, query: str, max_results: int = 5) -> str:
     Returns:
         str: JSON string of results related to the query.
     """
-
     response = self.client.search(
         query=query, search_depth=self.search_depth, include_answer=self.include_answer, max_results=max_results
     )
 
-    clean_response: Dict[str, Any] = {"query": query}
-    if "answer" in response:
-        clean_response["answer"] = response["answer"]
+    clean_response = [dict(title=r["title"],
+                           url=r["url"],
+                           contents=r["contents"],
+                           score=r["score"]) for r in response.get("results", [])]
 
-    clean_results = []
     current_token_count = len(json.dumps(clean_response))
-    for result in response.get("results", []):
-        _result = {
-            "title": result["title"],
-            "url": result["url"],
-            "content": result["content"],
-            "score": result["score"],
-        }
-        current_token_count += len(json.dumps(_result))
-        if current_token_count > self.max_tokens:
-            break
-        clean_results.append(_result)
-    clean_response["results"] = clean_results
-    _markdown = ""
-    _markdown += f"#### {query}\n\n"
-    if "answer" in clean_response:
-        _markdown += "#### Summary\n"
-        _markdown += f"{clean_response.get('answer')}\n\n"
-    for result in clean_response["results"]:
-        _markdown += f"#### [{result['title']}]({result['url']})\n"
-        _markdown += f"{result['content']}\n\n"
-    return _markdown
+    if current_token_count > self.max_tokens:
+        clean_response = clean_response[:self.max_tokens]
+
+    if not clean_response:
+        return "No results found."
+
+    # Format the results as Markdown
+    markdown_results = "# Search Results\n"
+    for result in clean_response:
+        markdown_results += f"## {result['title']}\n"
+        markdown_results += f"[Link]({result['url']})\n\n"
+        markdown_results += f"{result['contents']}\n\n"
+        markdown_results += f"**Score:** {result['score']}\n\n"
+    
+    return markdown_results
+
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
