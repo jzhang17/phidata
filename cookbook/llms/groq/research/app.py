@@ -43,11 +43,11 @@ import json  # Make sure to import the json module
 from typing import Optional, Literal, Dict, Any
 from phi.tools import Toolkit
 from phi.utils.log import logger
-
 try:
     from tavily import TavilyClient
 except ImportError:
     raise ImportError("`tavily-python` not installed. Please install using `pip install tavily-python`")
+from os import getenv
 
 
 
