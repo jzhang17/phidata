@@ -362,20 +362,20 @@ class StreamToExpander:
             self.current_expander = st.expander(f"Starting Search", expanded=True)
             self.expanders.append(self.current_expander)
 
-        # Detect and format JSON-like content for display in markdown text
-        json_like_pattern = re.compile(r'\[{\s*"url":\s*"https?://[^\s]*",\s*"content":\s*".*?"\s*}\]')
-        match = json_like_pattern.search(cleaned_data)
+        # Extract JSON-like string from the large text block
+        match = re.search(r'\[\{.*\}\]', large_text_block, re.DOTALL)
         if match:
-            json_content = match.group(0)
-            try:
-                parsed_json = json.loads(json_content.replace("'", '"'))
-                formatted_json = json.dumps(parsed_json, indent=4)
-                # Convert formatted JSON to readable markdown
-                markdown_content = "### JSON Output\n\n"
-                for item in parsed_json:
-                    markdown_content += f"- **URL:** {item['url']}\n"
-                    markdown_content += f"  **Content:** {item['content']}\n\n"
-                self.current_expander.markdown(markdown_content)
+            json_str = match.group(0)
+            data = json.loads(json_str.replace("'", "\""))
+        
+            # Generate markdown output
+            markdown_output = ""
+        
+            for entry in data:
+                url = entry['url']
+                content = entry['content']
+                markdown_output += f"[{url}]({url})\n\n{content}\n\n"
+                self.current_expander.markdown(markdown_output)
             except json.JSONDecodeError:
                 self.buffer.append(cleaned_data)
         else:
