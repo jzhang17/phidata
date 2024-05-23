@@ -359,13 +359,13 @@ class StreamToExpander:
             self.buffer = []
 
         if self.current_expander is None:
-            self.current_expander = st.expander(f"Starting Search")
+            self.current_expander = st.expander(f"Starting Search", expanded=True)
             self.expanders.append(self.current_expander)
 
         # Detect and format JSON-like content for display in markdown text 
         if "[{" in cleaned_data and "}]" in cleaned_data:
-            json_start = cleaned_data.find("[{'url': ")
-            json_end = cleaned_data.find("'}]")
+            json_start = cleaned_data.find("[{")
+            json_end = cleaned_data.find("}]")
             json_content = cleaned_data[json_start:json_end]
             try:
                 parsed_json = json.loads(json_content.replace("'", '"'))
