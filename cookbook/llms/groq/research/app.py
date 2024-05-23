@@ -56,47 +56,7 @@ avators = {"Researcher":"🔍",
 
             }
 
-@tool 
-def tavily_tool(query: str, max_results: int = 5) -> str:
-    """
-    Use this function to search the web for a given query.
-    This function uses the Tavily API to provide real-time online information about the query.
-    """
-
-    response = self.client.search(
-        query=query, search_depth=self.search_depth, include_answer=self.include_answer, max_results=max_results
-    )
-
-    clean_response = []
-    for result in response.get("results", []):
-        clean_response.append({
-            "title": result["title"],
-            "url": result["url"],
-            "content": result["content"],
-            "score": result["score"],
-        })
-
-    current_token_count = len(json.dumps(clean_response))
-    clean_results = clean_response
-    while current_token_count > self.max_tokens:
-        clean_results.pop()
-        current_token_count = len(json.dumps(clean_results))
-
-    self.format = "json"
-    if not clean_response:
-        return json.dumps({"results": "No results found."})
-
-    # Format the results in markdown
-    markdown = []
-    for result in clean_results:
-        markdown.append(f"### {result['title']}\n")
-        markdown.append(f"[Link]({result['url']})\n")
-        markdown.append(f"{result['content']}\n")
-        markdown.append(f"**Score**: {result['score']}\n")
-
-    return "\n".join(markdown)
-
-
+tavily_tool = TavilySearchResults(max_results=5)
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
