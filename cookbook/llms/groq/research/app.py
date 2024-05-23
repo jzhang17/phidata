@@ -362,20 +362,21 @@ class StreamToExpander:
             self.current_expander = st.expander(f"Starting Search", expanded=True)
             self.expanders.append(self.current_expander)
 
-        # Extract JSON-like string from the large text block
+        # Extract JSON-like string from the large text block 
         match = re.search(r'\[\{.*\}\]', cleaned_data, re.DOTALL)
         if match:
             json_str = match.group(0)
-            data = json.loads(json_str.replace("'", "\""))
+            try:
+                data = json.loads(json_str.replace("'", "\"").replace('\"\"', '\"'))
+                
+                # Generate markdown output
+                markdown_output = ""
         
-            # Generate markdown output
-            markdown_output = ""
-        
-            for entry in data:
-                url = entry['url']
-                content = entry['content']
-                markdown_output += f"[{url}]({url})\n\n{content}\n\n"
-                self.current_expander.markdown(markdown_output)
+                for entry in data:
+                    url = entry['url']
+                    content = entry['content']
+                    markdown_output += f"[{url}]({url})\n\n{content}\n\n"
+                    self.current_expander.markdown(markdown_output)
 
         
         else:
