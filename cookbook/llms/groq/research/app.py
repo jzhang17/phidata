@@ -363,18 +363,18 @@ class StreamToExpander:
             self.expanders.append(self.current_expander)
 
         # Detect and format JSON-like content for display in markdown text 
-        if "[{" in cleaned_data and "}]" in cleaned_data:
-            json_start = cleaned_data.find("[{")
+        if "[{'url': " in cleaned_data and "'}]" in cleaned_data:
+            json_start = cleaned_data.find("[{'url': ")
             json_end = cleaned_data.find("}]") + 2
             json_content = cleaned_data[json_start:json_end]
             try:
                 parsed_json = json.loads(json_content.replace("'", '"'))
                 formatted_json = json.dumps(parsed_json, indent=4)
                 # Convert formatted JSON to readable markdown
-                markdown_content = "### Search Results:\n\n"
+                markdown_content = "### JSON Output\n\n"
                 for item in parsed_json:
-                    markdown_content += f"- **Content:** {item['content']}"
-                    markdown_content += f"  **Read More:** {item['url']}\n\n"
+                    markdown_content += f"- **URL:** {item['url']}\n"
+                    markdown_content += f"  **Content:** {item['content']}\n\n"
                 self.current_expander.markdown(markdown_content)
             except json.JSONDecodeError:
                 self.buffer.append(cleaned_data)
@@ -384,6 +384,7 @@ class StreamToExpander:
         if "\n" in data:
             self.current_expander.markdown(''.join(self.buffer), unsafe_allow_html=True)
             self.buffer = []
+
 
     def flush(self):
         pass  # No operation for flushing needed
