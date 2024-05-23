@@ -91,19 +91,15 @@ def tavily_tool(self, query: str, max_results: int = 5) -> str:
             break
         clean_results.append(_result)
     clean_response["results"] = clean_results
-
-    if self.format == "json":
-        return json.dumps(clean_response) if clean_response else "No results found."
-    elif self.format == "markdown":
-        _markdown = ""
-        _markdown += f"#### {query}\n\n"
-        if "answer" in clean_response:
-            _markdown += "#### Summary\n"
-            _markdown += f"{clean_response.get('answer')}\n\n"
-        for result in clean_response["results"]:
-            _markdown += f"#### [{result['title']}]({result['url']})\n"
-            _markdown += f"{result['content']}\n\n"
-        return _markdown
+    _markdown = ""
+    _markdown += f"#### {query}\n\n"
+    if "answer" in clean_response:
+        _markdown += "#### Summary\n"
+        _markdown += f"{clean_response.get('answer')}\n\n"
+    for result in clean_response["results"]:
+        _markdown += f"#### [{result['title']}]({result['url']})\n"
+        _markdown += f"{result['content']}\n\n"
+    return _markdown
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
