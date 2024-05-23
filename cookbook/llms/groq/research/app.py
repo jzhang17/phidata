@@ -362,6 +362,7 @@ class StreamToExpander:
             self.current_expander = st.expander(f"Starting Search", expanded=True)
             self.expanders.append(self.current_expander)
 
+        self.expanders.append(self.current_expander)
         # Detect and format JSON-like content for display in markdown text 
         if "[{'url':" in cleaned_data and "}]" in cleaned_data:
             json_start = cleaned_data.find("[{'url':")
