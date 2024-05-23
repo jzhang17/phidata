@@ -63,8 +63,7 @@ def tavily_tool(report_topic):
     """Use this function to search the web for a given query.
     This function uses the Tavily API to provide realtime online information about the query.
     """
-    tavily_search_results1 = []
-    tavily_search_results1 += TavilyTools().web_search_using_tavily(report_topic)
+    tavily_search_results1 = TavilyTools().web_search_using_tavily(report_topic)
     return tavily_search_results1
 
 @tool
@@ -370,25 +369,6 @@ class StreamToExpander:
         if self.current_expander is None:
             self.current_expander = st.expander(f"Starting Search", expanded=True)
             self.expanders.append(self.current_expander)
-
-        # Extract JSON-like string from the large text block 
-        match = re.search(r'\[\{.*\}\]', cleaned_data, re.DOTALL)
-        if match:
-            json_str = match.group(0)
-            try:
-                data = json.loads(json_str.replace("'", "\"").replace('\"\"', '\"'))
-                
-                # Generate markdown output
-                markdown_output = ""
-        
-                for entry in data:
-                    url = entry['url']
-                    content = entry['content']
-                    markdown_output += f"[{url}]({url})\n\n{content}\n\n"
-                    self.current_expander.markdown(markdown_output)
-            except json.JSONDecodeError:
-                self.buffer.append(cleaned_data)
-
 
         
         else:
