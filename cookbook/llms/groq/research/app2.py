@@ -40,6 +40,8 @@ import re
 import sys
 from assistant import get_research_assistant, get_planning_assistant, get_dp_assistant, get_followup_assistant, get_consolidate_assistant
 import json  # Make sure to import the json module
+from phi.tools.tavily import TavilyTools
+
 
 
 st.set_page_config(
@@ -58,9 +60,10 @@ avators = {"Researcher":"🔍",
 
 tavily_tool = TavilySearchResults(max_results=5)
 
+
 @tool
 def scrape_webpages(urls: List[str]) -> str:
-    """Use requests to scrape the provided web pages for detailed information. Do not use for links to PDF."""
+    """Use requests to scrape the provided web pages for detailed information. Do not use for PDF."""
     combined_content = ""
     
     # Function to resize images in markdown to 300px wide using HTML
@@ -77,10 +80,10 @@ def scrape_webpages(urls: List[str]) -> str:
         # Resize images in the current content
         resized_content = resize_images(content)
         combined_content += resized_content
-        if len(combined_content) > 25000:
+        if len(combined_content) > 50000:
             break
             
-    return combined_content[:25000]  # Limit the output to the first 25,000 characters
+    return combined_content[:50000]  # Limit the output to the first 25,000 characters
 
 
 @tool
@@ -354,33 +357,41 @@ class StreamToExpander:
 
         # Check if the text contains a new thought
         if "Thought:" in cleaned_data:
-            self.current_expander = st.expander(f"Executing Intermediate Step")
+            self.current_expander = st.expander(f"Executing Intermediate Step", expanded=True)
             self.expanders.append(self.current_expander)
             self.buffer = []
 
         if self.current_expander is None:
-            self.current_expander = st.expander(f"Starting Search")
+            self.current_expander = st.expander(f"Starting Search", expanded=True)
             self.expanders.append(self.current_expander)
 
-        # Detect and format JSON-like content for display in a code block
-        if "[{" in cleaned_data and "}]" in cleaned_data:
-            json_start = cleaned_data.find("[{")
-            json_end = cleaned_data.find("}]") + 2
-            json_content = cleaned_data[json_start:json_end]
+        # Extract JSON-like string from the large text block 
+        match = re.search(r'\[\{.*\}\]', cleaned_data, re.DOTALL)
+        if match:
+            json_str = match.group(0)
             try:
-                # Replace single quotes with double quotes and handle escape sequences
-                json_content = json_content.replace("'", '"').replace('\\"', '"').replace("\\'", "'")
-                parsed_json = json.loads(json_content)
-                formatted_json = json.dumps(parsed_json, indent=4)
-                self.current_expander.json(formatted_json, expanded=True)
+                data = json.loads(json_str.replace("'", "\"").replace('\"\"', '\"'))
+                
+                # Generate markdown output
+                markdown_output = ""
+        
+                for entry in data:
+                    url = entry['url']
+                    content = entry['content']
+                    markdown_output += f"[{url}]({url})\n\n{content}\n\n"
+                    self.current_expander.markdown(markdown_output)
             except json.JSONDecodeError:
                 self.buffer.append(cleaned_data)
+
+
+        
         else:
             self.buffer.append(cleaned_data)
 
         if "\n" in data:
             self.current_expander.markdown(''.join(self.buffer), unsafe_allow_html=True)
             self.buffer = []
+
 
     def flush(self):
         pass  # No operation for flushing needed

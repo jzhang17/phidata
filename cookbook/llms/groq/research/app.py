@@ -42,6 +42,8 @@ from assistant import get_research_assistant, get_planning_assistant, get_dp_ass
 import json  # Make sure to import the json module
 from phi.tools.tavily import TavilyTools
 
+
+
 st.set_page_config(
     page_title="JZ NewBizBot",
     page_icon="💰"
@@ -55,12 +57,19 @@ avators = {"Researcher":"🔍",
             "Fact Check Agent":"❓"
 
             }
-tavily_tool = TavilySearchResults(max_results=5)
 
+@tool
+def tavily_tool(report_topic):
+    """Use this function to search the web for a given query.
+    This function uses the Tavily API to provide realtime online information about the query.
+    """
+    tavily_search_results1 = []
+    tavily_search_results1 += TavilyTools().web_search_using_tavily(report_topic)
+    return tavily_search_results1
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
-    """Use requests to scrape the provided web pages for detailed information. Do not use for links to PDF."""
+    """Use requests to scrape the provided web pages for detailed information. Do not use for PDF."""
     combined_content = ""
     
     # Function to resize images in markdown to 300px wide using HTML
