@@ -70,7 +70,7 @@ class TavilyTools(Toolkit):
         self,
         api_key: Optional[str] = None,
         search: bool = True,
-        max_tokens: int = 2000,
+        max_tokens: int = 5000,
         include_answer: bool = True,
         search_depth: Literal["basic", "advanced"] = "advanced",
         format: Literal["json", "markdown"] = "markdown",
