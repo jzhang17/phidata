@@ -55,12 +55,8 @@ avators = {"Researcher":"🔍",
             "Fact Check Agent":"❓"
 
             }
-@tool
-def Search_Web(report_topic, max_results: int = 5, format="markdown"):
-    """Use this function to search the web for a given query.
-    This function uses the Tavily API to provide realtime online information about the query.
-    """
-    return TavilyTools().web_search_using_tavily(report_topic)
+tavily_tool = TavilySearchResults(max_results=5)
+
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
@@ -213,7 +209,7 @@ Researcher = Agent(
         3. **For a Company**: Create thorough profiles for top executives, pinpoint primary investors, record significant financial milestones, and evaluate the company's financial health using metrics like valuation, revenue, and profitability. Link to resources such as [Yahoo Finance](https://finance.yahoo.com/) or the company website for financial reports and analyses.
 
         ''',
-    tools=[Search_Web,scrape_webpages,load_pdf,nonprofit_financials],  # This can be optionally specified; defaults to an empty list
+    tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # This can be optionally specified; defaults to an empty list
     llm=llm,
     verbose=True
     )
