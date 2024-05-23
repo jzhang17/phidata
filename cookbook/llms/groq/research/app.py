@@ -77,10 +77,10 @@ def scrape_webpages(urls: List[str]) -> str:
         # Resize images in the current content
         resized_content = resize_images(content)
         combined_content += resized_content
-        if len(combined_content) > 25000:
+        if len(combined_content) > 50000:
             break
             
-    return combined_content[:25000]  # Limit the output to the first 25,000 characters
+    return combined_content[:50000]  # Limit the output to the first 25,000 characters
 
 
 @tool
@@ -354,7 +354,7 @@ class StreamToExpander:
 
         # Check if the text contains a new thought
         if "Thought:" in cleaned_data:
-            self.current_expander = st.expander(f"Executing Intermediate Step")
+            self.current_expander = st.expander(f"Executing Intermediate Step", expanded=True)
             self.expanders.append(self.current_expander)
             self.buffer = []
 
@@ -362,25 +362,30 @@ class StreamToExpander:
             self.current_expander = st.expander(f"Starting Search")
             self.expanders.append(self.current_expander)
 
-        # Detect and format JSON-like content for display in a code block
-        if "[{" in cleaned_data and "}]" in cleaned_data:
-            json_start = cleaned_data.find("[{")
-            json_end = cleaned_data.find("}]") + 2
-            json_content = cleaned_data[json_start:json_end]
-            try:
-                # Replace single quotes with double quotes and handle escape sequences
-                json_content = json_content.replace("'", '"').replace('\\"', '"').replace("\\'", "'")
-                parsed_json = json.loads(json_content)
-                formatted_json = json.dumps(parsed_json, indent=4)
-                self.current_expander.json(formatted_json, expanded=True)
-            except json.JSONDecodeError:
-                self.buffer.append(cleaned_data)
+        # Check if the data is a JSON search result
+        if "Action: tavily_search_results_json Action Input:" in cleaned_data:
+            json_data_start = cleaned_data.find("[{'url':")
+            if json_data_start != -1:
+                search_results_json = cleaned_data[json_data_start:]
+                search_results = eval(search_results_json)
+                self.display_search_results(search_results, expanded=True)
         else:
             self.buffer.append(cleaned_data)
+            if "\n" in data:
+                self.current_expander.markdown(''.join(self.buffer), unsafe_allow_html=True)
+                self.buffer = []
 
-        if "\n" in data:
-            self.current_expander.markdown(''.join(self.buffer), unsafe_allow_html=True)
-            self.buffer = []
+    def display_search_results(self, search_results):
+        if self.current_expander is None:
+            self.current_expander = st.expander(f"Search Results")
+            self.expanders.append(self.current_expander)
+        
+        self.current_expander.write("Search results:")
+        for result in search_results:
+            with self.current_expander.container():
+                st.markdown(f"### [{result['url']}]({result['url']})")
+                st.write(result['content'])
+
 
     def flush(self):
         pass  # No operation for flushing needed
