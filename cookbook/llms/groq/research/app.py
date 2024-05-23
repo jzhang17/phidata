@@ -40,7 +40,7 @@ import re
 import sys
 from assistant import get_research_assistant, get_planning_assistant, get_dp_assistant, get_followup_assistant, get_consolidate_assistant
 import json  # Make sure to import the json module
-
+from phi.tools.tavily import TavilyTools
 
 st.set_page_config(
     page_title="JZ NewBizBot",
@@ -56,7 +56,53 @@ avators = {"Researcher":"🔍",
 
             }
 
-tavily_tool = TavilySearchResults(max_results=5)
+def tavily_tool(self, query: str, max_results: int = 5, format='markdown') -> str:
+    """Use this function to search the web for a given query.
+    This function uses the Tavily API to provide realtime online information about the query.
+
+    Args:
+        query (str): Query to search for.
+        max_results (int): Maximum number of results to return. Defaults to 5.
+
+    Returns:
+        str: JSON string of results related to the query.
+    """
+
+    response = self.client.search(
+        query=query, search_depth=self.search_depth, include_answer=self.include_answer, max_results=max_results
+    )
+
+    clean_response: Dict[str, Any] = {"query": query}
+    if "answer" in response:
+        clean_response["answer"] = response["answer"]
+
+    clean_results = []
+    current_token_count = len(json.dumps(clean_response))
+    for result in response.get("results", []):
+        _result = {
+            "title": result["title"],
+            "url": result["url"],
+            "content": result["content"],
+            "score": result["score"],
+        }
+        current_token_count += len(json.dumps(_result))
+        if current_token_count > self.max_tokens:
+            break
+        clean_results.append(_result)
+    clean_response["results"] = clean_results
+
+    if self.format == "json":
+        return json.dumps(clean_response) if clean_response else "No results found."
+    elif self.format == "markdown":
+        _markdown = ""
+        _markdown += f"#### {query}\n\n"
+        if "answer" in clean_response:
+            _markdown += "#### Summary\n"
+            _markdown += f"{clean_response.get('answer')}\n\n"
+        for result in clean_response["results"]:
+            _markdown += f"#### [{result['title']}]({result['url']})\n"
+            _markdown += f"{result['content']}\n\n"
+        return _markdown
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
