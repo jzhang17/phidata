@@ -142,7 +142,10 @@ class TavilyTools(Toolkit):
             for result in clean_response["results"]:
                 _markdown += f"#### [{result['title']}]({result['url']})\n"
                 _markdown += f"{result['content']}\n\n"
-            _markdown += f"Links for further analysis: {clean_response["results"]['url']}"
+            link = []
+            for result in clean_response["results"]:
+                links += [result['url']]
+                _markdown += f"Links for further analysis: {links}"
             return _markdown
 
     def web_search_with_tavily(self, query: str) -> str:
