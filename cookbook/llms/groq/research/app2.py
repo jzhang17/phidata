@@ -142,7 +142,7 @@ class TavilyTools(Toolkit):
             for result in clean_response["results"]:
                 _markdown += f"#### [{result['title']}]({result['url']})\n"
                 _markdown += f"{result['content']}\n\n"
-            link = []
+            links = []
             for result in clean_response["results"]:
                 links += [result['url']]
                 _markdown += f"Links for further analysis: {links}"
