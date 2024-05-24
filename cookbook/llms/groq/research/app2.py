@@ -558,7 +558,7 @@ if with_clear_container(submit_clicked):
         )
 
         task2 = Task(
-        description="""Identify any missing information regarding {prompt}. Perform additional research to ensure your report is as comprehensive as possible""",
+        description=f"""Identify any missing information regarding {prompt}. Perform additional research to ensure your report is as comprehensive as possible""",
         agent=Followup_Agent,
         context=task1,
         expected_output='''
