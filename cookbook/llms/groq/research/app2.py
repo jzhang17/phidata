@@ -197,7 +197,7 @@ def scrape_webpages(urls: List[str]) -> str:
     
     for url in urls:
         response = requests.get("https://r.jina.ai/" + url)
-        content = response.text
+        content = response.text.replace("$","\$")
         # Resize images in the current content
         resized_content = resize_images(content)
         combined_content += resized_content
