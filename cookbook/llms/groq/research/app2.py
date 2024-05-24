@@ -138,7 +138,7 @@ class TavilyTools(Toolkit):
             _markdown += f"#### {query}\n\n"
             if "answer" in clean_response:
                 _markdown += "#### Summary\n"
-                _markdown += f"{clean_response.get('answer').replace("$","\$")}\n\n"
+                _markdown += f"{clean_response.get('answer')}\n\n"
             for result in clean_response["results"]:
                 _markdown += f"#### [{result['title']}]({result['url']})\n"
                 _markdown += f"{result['content']}\n\n"
