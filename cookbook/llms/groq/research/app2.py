@@ -160,11 +160,11 @@ class TavilyTools(Toolkit):
         )
 
 @tool
-def tavily_tool(report_topic):
-    """Use this function to search the web for a given query.
-    This function uses the Tavily API to provide realtime online information about the query.
+def tavily_tool(query):
+    """A search engine optimized for comprehensive, accurate, and trusted results. 
+    Useful for when you need to answer questions about current events. Input should be a search query.
     """
-    tavily_search_results1 = TavilyTools().web_search_using_tavily(report_topic)
+    tavily_search_results1 = TavilyTools().web_search_using_tavily(query)
     return tavily_search_results1
 
 @tool
