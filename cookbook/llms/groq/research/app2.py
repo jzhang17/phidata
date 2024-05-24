@@ -41,6 +41,14 @@ import sys
 from assistant import get_research_assistant, get_planning_assistant, get_dp_assistant, get_followup_assistant, get_consolidate_assistant
 import json  # Make sure to import the json module
 from phi.tools.tavily import TavilyTools
+from typing import Optional, Literal, Dict, Any
+from phi.tools import Toolkit
+from phi.utils.log import logger
+try:
+    from tavily import TavilyClient
+except ImportError:
+    raise ImportError("`tavily-python` not installed. Please install using `pip install tavily-python`")
+from os import getenv
 
 
 
@@ -552,7 +560,7 @@ if with_clear_container(submit_clicked):
         task2 = Task(
         description="""Identify any missing information regarding {prompt}. Perform additional research to ensure your report is as comprehensive as possible""",
         agent=Followup_Agent,
-        context=task1
+        context=task1,
         expected_output='''
             #### Individual Prospect Profile: John Doe
             - **Name:** John Doe
