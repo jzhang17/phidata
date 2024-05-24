@@ -154,9 +154,9 @@ class TavilyTools(Toolkit):
                     webpage_links.append(url)
 
             if pdf_links:
-                _markdown += f"Links for load_pdf tool: {pdf_links}\n"
+                _markdown += f"Links for load_pdf tool: {pdf_links}\n\n"
             if webpage_links:
-                _markdown += f"Links for scrape_webpages tool: {webpage_links}"
+                _markdown += f"Links for scrape_webpages tool: {webpage_links}\n"
             return _markdown
 
     def web_search_with_tavily(self, query: str) -> str:
@@ -184,7 +184,7 @@ def tavily_tool(query):
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
-    """Use requests to scrape the provided web pages for detailed information. Do not use for PDF."""
+    """Use requests to scrape the provided web pages for detailed information."""
     combined_content = ""
     
     # Function to resize images in markdown to 300px wide using HTML
@@ -209,7 +209,7 @@ def scrape_webpages(urls: List[str]) -> str:
 
 @tool
 def nonprofit_financials(nonprofit_name):
-    """Get only structured financial data for nonprofits from prorebulica. This tool prefers EIN as input."""
+    """Get only structured financial data for nonprofits. This tool prefers EIN as input."""
 
     
     base_url = "https://projects.propublica.org/nonprofits/api/v2"
@@ -296,7 +296,7 @@ def nonprofit_financials(nonprofit_name):
 
 @tool
 def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> str:
-    """Load a PDF file and return its content as a single string, limited to the first 50,000 tokens."""
+    """Research the in PDF file and return its content for analysis."""
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
