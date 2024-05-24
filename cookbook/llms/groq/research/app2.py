@@ -146,7 +146,7 @@ class TavilyTools(Toolkit):
             pdf_links = []
             webpage_links = []
             
-            for result in tavily_search_results1["results"]:
+            for result in clean_response["results"]:
                 url = result['url']
                 if "pdf" in url.lower():
                     pdf_links.append(url)
