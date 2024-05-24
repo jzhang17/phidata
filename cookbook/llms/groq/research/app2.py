@@ -145,7 +145,7 @@ class TavilyTools(Toolkit):
             links = []
             for result in clean_response["results"]:
                 links += [result['url']]
-                _markdown += f"Links for further analysis: {links}"
+            _markdown += f"Links for scrape_webpages tool: {links}"
             return _markdown
 
     def web_search_with_tavily(self, query: str) -> str:
