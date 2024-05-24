@@ -138,14 +138,25 @@ class TavilyTools(Toolkit):
             _markdown += f"#### {query}\n\n"
             if "answer" in clean_response:
                 _markdown += "#### Summary\n"
-                _markdown += f"{clean_response.get('answer')}\n\n"
+                _markdown += f"{clean_response.get('answer').replace("$","\$")}\n\n"
             for result in clean_response["results"]:
                 _markdown += f"#### [{result['title']}]({result['url']})\n"
                 _markdown += f"{result['content']}\n\n"
-            links = []
-            for result in clean_response["results"]:
-                links += [result['url']]
-            _markdown += f"Links for scrape_webpages tool: {links}"
+            _markdown = _markdown.replace("$","\$")
+            pdf_links = []
+            webpage_links = []
+            
+            for result in tavily_search_results1["results"]:
+                url = result['url']
+                if "pdf" in url.lower():
+                    pdf_links.append(url)
+                else:
+                    webpage_links.append(url)
+
+            if pdf_links:
+                _markdown += f"Links for load_pdf tool: {pdf_links}\n"
+            if webpage_links:
+                _markdown += f"Links for scrape_webpages tool: {webpage_links}"
             return _markdown
 
     def web_search_with_tavily(self, query: str) -> str:
@@ -284,10 +295,11 @@ def nonprofit_financials(nonprofit_name):
     
 
 @tool
-def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> List[str]:
-    """Load a PDF file and return its content as a list of strings."""
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-    
+def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> str:
+    """Load a PDF file and return its content as a single string, limited to the first 50,000 tokens."""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
     # Download the PDF with headers
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
@@ -295,15 +307,15 @@ def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> List[str]:
             file.write(response.content)
     else:
         raise ValueError(f"Failed to download file: status code {response.status_code}")
-    
-    loader = PyPDFLoader(local_path)
-    docs = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.split_documents(docs)
-    
-    # Print the chunks
-    for chunk in texts:
-        return chunk
+    reader = PyPDFLoader(local_path)
+    text = ""
+    # Extract text from each page and accumulate until 50,000 tokens
+    for page in reader.pages:
+        text += page.extract_text()
+        if len(text.split()) >= 50000:
+            text = ' '.join(text.split()[:50000])
+            break
+    return text
 
 Researcher = Agent(
     role='Researcher',
