@@ -685,4 +685,4 @@ if with_clear_container(submit_clicked):
             dp_report += delta  # type: ignore)
 
         st.header("Results:")
-        st.markdown(crew_result + spacing + dp_report)
+        st.markdown(crew_result.replace("$","\$") + spacing + dp_report)
