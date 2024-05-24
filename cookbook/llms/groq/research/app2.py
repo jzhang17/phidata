@@ -179,8 +179,8 @@ def tavily_tool(query):
     """A search engine optimized for comprehensive, accurate, and trusted results. 
     Useful for when you need to answer questions about current events. Input should be a search query.
     """
-    tavily_search_results1 = TavilyTools().web_search_using_tavily(query)
-    return tavily_search_results1
+    tavily_search_results = TavilyTools().web_search_using_tavily(query)
+    return tavily_search_results
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
