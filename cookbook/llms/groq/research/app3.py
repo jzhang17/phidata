@@ -48,6 +48,7 @@ st.set_page_config(
 )
 st.title("JZ NewBizBot v5")
 
+
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
 avators = {"Researcher":"🔍",
@@ -56,11 +57,124 @@ avators = {"Researcher":"🔍",
 
             }
 
-tavily_tool = TavilySearchResults(max_results=5)
+class TavilyTools(Toolkit):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        search: bool = True,
+        max_tokens: int = 5000,
+        include_answer: bool = True,
+        search_depth: Literal["basic", "advanced"] = "advanced",
+        format: Literal["json", "markdown"] = "markdown",
+        use_search_context: bool = False,
+    ):
+        super().__init__(name="tavily_tools")
+
+        self.api_key = api_key or getenv("TAVILY_API_KEY")
+        if not self.api_key:
+            logger.error("TAVILY_API_KEY not provided")
+
+        self.client: TavilyClient = TavilyClient(api_key=self.api_key)
+        self.search_depth: Literal["basic", "advanced"] = search_depth
+        self.max_tokens: int = max_tokens
+        self.include_answer: bool = include_answer
+        self.format: Literal["json", "markdown"] = format
+
+        if search:
+            if use_search_context:
+                self.register(self.web_search_with_tavily)
+            else:
+                self.register(self.web_search_using_tavily)
+
+    def web_search_using_tavily(self, query: str, max_results: int = 5) -> str:
+        """Use this function to search the web for a given query.
+        This function uses the Tavily API to provide realtime online information about the query.
+
+        Args:
+            query (str): Query to search for.
+            max_results (int): Maximum number of results to return. Defaults to 5.
+
+        Returns:
+            str: JSON string of results related to the query.
+        """
+
+        response = self.client.search(
+            query=query, search_depth=self.search_depth, include_answer=self.include_answer, max_results=max_results
+        )
+
+        clean_response: Dict[str, Any] = {"query": query}
+        if "answer" in response:
+            clean_response["answer"] = response["answer"]
+
+        clean_results = []
+        current_token_count = len(json.dumps(clean_response))
+        for result in response.get("results", []):
+            _result = {
+                "title": result["title"],
+                "url": result["url"],
+                "content": result["content"],
+                "score": result["score"],
+            }
+            current_token_count += len(json.dumps(_result))
+            if current_token_count > self.max_tokens:
+                break
+            clean_results.append(_result)
+        clean_response["results"] = clean_results
+
+        if self.format == "json":
+            return json.dumps(clean_response) if clean_response else "No results found."
+        elif self.format == "markdown":
+            _markdown = ""
+            _markdown += f"#### {query}\n\n"
+            if "answer" in clean_response:
+                _markdown += "#### Summary\n"
+                _markdown += f"{clean_response.get('answer')}\n\n"
+            for result in clean_response["results"]:
+                _markdown += f"#### [{result['title']}]({result['url']})\n"
+                _markdown += f"{result['content']}\n\n"
+            _markdown = _markdown.replace("$","\$")
+            pdf_links = []
+            webpage_links = []
+            
+            for result in clean_response["results"]:
+                url = result['url']
+                if "pdf" in url.lower():
+                    pdf_links.append(url)
+                else:
+                    webpage_links.append(url)
+
+            if pdf_links:
+                _markdown += f"Links for load_pdf tool: {pdf_links}\n\n"
+            if webpage_links:
+                _markdown += f"Links for scrape_webpages tool: {webpage_links}\n"
+            return _markdown
+
+    def web_search_with_tavily(self, query: str) -> str:
+        """Use this function to search the web for a given query.
+        This function uses the Tavily API to provide realtime online information about the query.
+
+        Args:
+            query (str): Query to search for.
+
+        Returns:
+            str: JSON string of results related to the query.
+        """
+
+        return self.client.get_search_context(
+            query=query, search_depth=self.search_depth, max_tokens=self.max_tokens, include_answer=self.include_answer
+        )
+
+@tool
+def tavily_tool(query):
+    """A search engine optimized for comprehensive, accurate, and trusted results. 
+    Useful for when you need to answer questions about current events. Input should be a search query.
+    """
+    tavily_search_results = TavilyTools().web_search_using_tavily(query)
+    return tavily_search_results
 
 @tool
 def scrape_webpages(urls: List[str]) -> str:
-    """Use requests to scrape the provided web pages for detailed information. Do not use for links to PDF."""
+    """Use requests to scrape the provided web pages for detailed information."""
     combined_content = ""
     
     # Function to resize images in markdown to 300px wide using HTML
@@ -73,19 +187,19 @@ def scrape_webpages(urls: List[str]) -> str:
     
     for url in urls:
         response = requests.get("https://r.jina.ai/" + url)
-        content = response.text
+        content = response.text.replace("$","\$")
         # Resize images in the current content
         resized_content = resize_images(content)
         combined_content += resized_content
-        if len(combined_content) > 25000:
+        if len(combined_content) > 50000:
             break
             
-    return combined_content[:25000]  # Limit the output to the first 25,000 characters
+    return combined_content[:50000]  # Limit the output to the first 25,000 characters
 
 
 @tool
 def nonprofit_financials(nonprofit_name):
-    """Get only structured financial data for nonprofits from prorebulica. This tool prefers EIN as input."""
+    """Get only structured financial data for nonprofits. This tool prefers EIN as input."""
 
     
     base_url = "https://projects.propublica.org/nonprofits/api/v2"
@@ -171,10 +285,11 @@ def nonprofit_financials(nonprofit_name):
     
 
 @tool
-def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> List[str]:
-    """Load a PDF file and return its content as a list of strings."""
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-    
+def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> str:
+    """Research the in PDF file and return its content for analysis."""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
     # Download the PDF with headers
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
@@ -182,15 +297,15 @@ def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> List[str]:
             file.write(response.content)
     else:
         raise ValueError(f"Failed to download file: status code {response.status_code}")
-    
-    loader = PyPDFLoader(local_path)
-    docs = loader.load()
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.split_documents(docs)
-    
-    # Print the chunks
-    for chunk in texts:
-        return chunk
+    reader = PyPDFLoader(local_path)
+    text = ""
+    # Extract text from each page and accumulate until 50,000 tokens
+    for page in reader.pages:
+        text += page.extract_text()
+        if len(text.split()) >= 50000:
+            text = ' '.join(text.split()[:50000])
+            break
+    return text
 
 Researcher = Agent(
     role='Researcher',
@@ -216,14 +331,22 @@ Researcher = Agent(
 
 Followup_Agent = Agent(
     role='Followup Agent',
-    backstory='''You are an expert in wealth and investment management, specializing in developing comprehensive client profiles across various sectors. 
-                Your task is to create detailed financial profiles of potential clients without strategizing. 
-                Utilize your expertise to produce informative profiles that will aid in crafting personalized financial management plans later. 
-                Include hyperlinks to essential financial data sources like Bloomberg, Forbes, and specific financial databases for additional context.
+    backstory='''### Expert Instruction:
+You are an expert in wealth and investment management, specializing in developing comprehensive client profiles across various sectors. Your task is to read the current report, identify missing information, and perform further research to find out more information. Make sure to include sources and corresponding hyperlinks for any new data you add.
+
+### Context:
+Your service offerings include investment management, Outsourced Chief Investment Officer (OCIO) services, private banking, single-stock risk handling, and trust & estate planning. Leverage your expertise to provide analytical insights suitable for a diverse client base. Adopt a methodical and detail-oriented approach to ensure all pertinent financial details are covered comprehensively.
+additional context.
                 ''',
-    goal='''Create thorough profiles for top executives, pinpoint primary investors, record significant financial milestones, and evaluate the company's financial health using metrics like valuation, revenue, and profitability. 
+    goal='''
+### Objectives:
+1. **For an Individual**: Gather and add information about the individual's employment history, age, personal net worth, diverse income sources, family circumstances, and involvement in boards or charities if this information is missing. Make sure to include sources and hyperlinks.
+
+2. **For a Nonprofit**: Make sure to include all members of the board of trustees and detailed financials if these details are missing. Provide sources and hyperlinks for all information gathered.
+
+3. **For a Company**: Ensure to include information about top executives, primary investors, valuation, revenue, and profitability if absent. Include sources and hyperlinks for each piece of added information
     ''',
-    tools=[tavily_tool],  # Optionally specify tools; defaults to an empty list
+    tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
     llm=llm,
     verbose=True
 )
@@ -354,33 +477,22 @@ class StreamToExpander:
 
         # Check if the text contains a new thought
         if "Thought:" in cleaned_data:
-            self.current_expander = st.expander(f"Executing Intermediate Step")
+            self.current_expander = st.expander(f"Executing Intermediate Step", expanded=True)
             self.expanders.append(self.current_expander)
             self.buffer = []
 
         if self.current_expander is None:
-            self.current_expander = st.expander(f"Starting Search")
+            self.current_expander = st.expander(f"Starting Search", expanded=True)
             self.expanders.append(self.current_expander)
 
-        # Detect and format JSON-like content for display in a code block
-        if "[{" in cleaned_data and "}]" in cleaned_data:
-            json_start = cleaned_data.find("[{")
-            json_end = cleaned_data.find("}]") + 2
-            json_content = cleaned_data[json_start:json_end]
-            try:
-                # Replace single quotes with double quotes and handle escape sequences
-                json_content = json_content.replace("'", '"').replace('\\"', '"').replace("\\'", "'")
-                parsed_json = json.loads(json_content)
-                formatted_json = json.dumps(parsed_json, indent=4)
-                self.current_expander.json(formatted_json, expanded=True)
-            except json.JSONDecodeError:
-                self.buffer.append(cleaned_data)
+        
         else:
             self.buffer.append(cleaned_data)
 
         if "\n" in data:
             self.current_expander.markdown(''.join(self.buffer), unsafe_allow_html=True)
             self.buffer = []
+
 
     def flush(self):
         pass  # No operation for flushing needed
@@ -452,30 +564,61 @@ if with_clear_container(submit_clicked):
         )
 
         task2 = Task(
-        description="""Generate a research report of relevent individual memtioned. """,
+        description=f"""Identify any missing information regarding {prompt}. Perform additional research to ensure your report is as comprehensive as possible""",
         agent=Followup_Agent,
         expected_output='''
-            #### Desired Output:
-            Produce detailed, structured profiles that meticulously capture the financial and personal complexities of potential clients. 
-            These profiles should be rich in data and neatly organized to serve as a foundational tool for subsequent personalized financial planning and advisory sessions. 
-            Ensure each profile incorporates relevant hyperlinks to substantiate the data collected or to offer further insights.
+            #### Individual Prospect Profile: John Doe
+            - **Name:** John Doe
+            - **Summary:** John Doe is a seasoned tech entrepreneur with a demonstrated history of success in the tech industry and a strong commitment to philanthropy. His current focus is on innovative solutions that address key societal challenges.
+            - **Age:** 45
+            - **Location:** New York
+            - **Net Worth:** Approximately `$2 million, verified by [WealthX](https://www.wealthx.com/)
+            - **Occupation:** Tech Entrepreneur with a focus on innovative software solutions. View the LinkedIn Profile: [John Doe](https://www.linkedin.com/in/johndoe/)
+            - **Family Dynamics:** Married with two children, emphasizing a balanced work-life integration
+            - **Board Affiliations:** Active in philanthropic ventures; serves on the boards of:
+                - XYZ Nonprofit: Promoting educational initiatives. More details [here](https://www.xyznonprofit.org)
+                - ABC Foundation: Supporting environmental sustainability. Learn more [here](https://www.abcfoundation.org/about-us)
+            - **Interests:** Known for interests in renewable energy and education technology
+            - **Recent News:** John Doe was recently featured in a TechCrunch article for his significant contribution to developing a new educational app that aims to improve accessibility for students with disabilities. Read the full article [here](https://techcrunch.com).
+            - **Additional Information:** 
+                - Advocates for technology-driven solutions to social issues
+                - Actively participates in conferences and workshops related to tech innovation and social responsibility.
 
-            ### Nonprofit Organization Profile: Help the World Grow
-                - **Organization Name:** Help the World Grow
-                - **Location:** Los Angeles, CA
-                - **Summary:** Help the World Grow is a robust nonprofit organization with a global reach, actively working to enhance educational outcomes and reduce inequalities through strategic partnerships and impactful initiatives.
-                - **Mission:** Dedicated to fostering educational opportunities and reducing inequality worldwide
-                - **Asset Size:** Estimated at `$5 million
-                - **Investment Committee Key Member:** Jane Smith, notable for her expertise in financial strategy; profile available on the organization’s [team page](https://www.helptheworldgrow.org/team)
-                - **Major Donors:**
-                    - XYZ Corp: Engaged in various corporate philanthropy efforts, details [here](https://www.xyzcorp.com/philanthropy)
-                    - ABC Foundation: Long-term supporter, focusing on impactful projects
-                - **Financial Disclosures:** Recent Form 990 indicates a surplus of `$200,000 in the last fiscal year. The report is accessible at [CauseIQ](https://www.causeiq.com/)
-                - **Impact Highlights:** Recent projects have notably increased literacy rates in underserved regions
-                - **Recent News:** The organization has launched a new initiative in partnership with local governments in South America to enhance educational infrastructure, reported last week by CNN. Full story [here](https://www.cnn.com).
-                - **Additional Information:** 
-                    - Collaborates with educational experts and local communities to tailor programs
-                    - Addresses specific educational challenges in various regions
+        #### Nonprofit Organization Profile: Help the World Grow
+            - **Organization Name:** Help the World Grow
+            - **Location:** Los Angeles, CA
+            - **Summary:** Help the World Grow is a robust nonprofit organization with a global reach, actively working to enhance educational outcomes and reduce inequalities through strategic partnerships and impactful initiatives.
+            - **Mission:** Dedicated to fostering educational opportunities and reducing inequality worldwide
+            - **Asset Size:** Estimated at `$5 million
+            - **Key Members:** 
+                - Jane Smith, notable for her expertise in financial strategy; profile available on the organization’s [team page](https://www.helptheworldgrow.org/team)
+                - John Doe, notable for her expertise in financial strategy; profile available on the organization’s [team page](https://www.helptheworldgrow.org/team)
+            - **Major Donors:**
+                - XYZ Corp: Engaged in various corporate philanthropy efforts, details [here](https://www.xyzcorp.com/philanthropy)
+                - ABC Foundation: Long-term supporter, focusing on impactful projects
+            - **Financial Disclosures:** Recent Form 990 indicates a surplus of `$200,000 in the last fiscal year. The report is accessible at [CauseIQ](https://www.causeiq.com/)
+            - **Impact Highlights:** Recent projects have notably increased literacy rates in underserved regions
+            - **Recent News:** The organization has launched a new initiative in partnership with local governments in South America to enhance educational infrastructure, reported last week by CNN. Full story [here](https://www.cnn.com).
+            - **Additional Information:** 
+                - Collaborates with educational experts and local communities to tailor programs
+                - Addresses specific educational challenges in various regions
+
+        #### Company Profile: Innovative Tech Solutions
+            - **Company Name:** Innovative Tech Solutions
+            - **Location:** San Diego
+            - **Summary:** Innovative Tech Solutions is a leading tech company that stands at the forefront of AI and machine learning technology, with strong financial performance and strategic plans for continued growth and innovation in the industry.
+            - **Industry:** Technology, specializing in AI and machine learning applications
+            - **CEO:** Robert Johnson, a visionary leader with over 20 years in the tech industry. Full bio available on [Bloomberg Executives](https://www.bloomberg.com/profile/person/xxxxx)
+            - **Founder:** Emily White, an entrepreneur recognized for her innovative approaches to technology development
+            - **Major Investors:** Includes prominent venture capital firms such as [VentureXYZ](https://www.venturexyz.com) and [CapitalABC](https://www.capitalabc.com)
+            - **Financial Performance Metrics:**
+                - Current Valuation: `$50 million
+                - Annual Revenue: `$10 million, demonstrating robust growth in the tech sector
+                - Annual Profit: `$1 million, highlighting effective cost management and business operations
+            - **Recent News:** Innovative Tech Solutions has been awarded a patent for a groundbreaking AI algorithm that optimizes energy usage in large-scale manufacturing, as reported last month by Forbes. More details [here](https://www.forbes.com).
+            - **Additional Information:** 
+                - Committed to sustainability, investing in green technologies
+                - Aiming to reduce its carbon footprint over the next decade
                     '''
         )
 
@@ -532,11 +675,4 @@ if with_clear_container(submit_clicked):
             dp_report += delta  # type: ignore)
 
         st.header("Results:")
-        st.markdown(crew_result + spacing + dp_report)
-        
-
-
-
-
-
-    
+        st.markdown(crew_result.replace("$","\$") + spacing + dp_report)
