@@ -646,7 +646,7 @@ if with_clear_container(submit_clicked):
             tasks=[task1,task3],  # Tasks to be delegated and executed under the manager's supervision
             agents=[Researcher,Factcheck_agent],
             manager_llm=llm,
-            process=Process.sequential  # Specifies the hierarchical management approach
+            process=Process.hierarchical  # Specifies the hierarchical management approach
         )
 
 
