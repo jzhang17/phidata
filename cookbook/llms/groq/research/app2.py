@@ -143,9 +143,10 @@ class TavilyTools(Toolkit):
             _markdown = _markdown.replace("$","\$")
             pdf_links = []
             webpage_links = []
-            
             for result in clean_response["results"]:
                 url = result['url']
+                if "https://www.linkedin.com/in" in url:
+                    continue
                 if "pdf" in url.lower():
                     pdf_links.append(url)
                 else:
@@ -156,6 +157,7 @@ class TavilyTools(Toolkit):
             if webpage_links:
                 _markdown += f"Links for scrape_webpages tool: {webpage_links}\n"
             return _markdown
+
 
     def web_search_with_tavily(self, query: str) -> str:
         """Use this function to search the web for a given query.
