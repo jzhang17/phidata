@@ -494,7 +494,6 @@ class StreamToExpander:
             self.current_expander = st.expander(f"Starting Search", expanded=True)
             self.expanders.append(self.current_expander)
 
-        
         else:
             self.buffer.append(cleaned_data)
 
@@ -643,8 +642,8 @@ if with_clear_container(submit_clicked):
 
         # Establishing the crew with a hierarchical process
         project_crew = Crew(
-            tasks=[task1,task3],  # Tasks to be delegated and executed under the manager's supervision
-            agents=[Researcher,Factcheck_agent],
+            tasks=[task1],  # Tasks to be delegated and executed under the manager's supervision
+            agents=[Researcher],
             manager_llm=llm,
             process=Process.hierarchical  # Specifies the hierarchical management approach
         )
