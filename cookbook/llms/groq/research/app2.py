@@ -513,7 +513,7 @@ if with_clear_container(submit_clicked):
     if prompt := user_input:
         st.session_state["messages"] = [{"role": "user", "content": prompt}]
         task1 = Task(
-        description=f"""Produce detailed, structured profiles that meticulously capture the financial complexities of {prompt}. These profiles should be rich in data and neatly organized to serve as a foundational tool for subsequent personalized financial planning and advisory sessions. Ensure each profile incorporates relevant hyperlinks to substantiate the data collected or to offer further insights.""",
+        description=f"""Produce detailed, structured profiles that meticulously capture the financial complexities of {prompt}. These profiles should be rich in data and neatly organized.""",
         agent=Researcher,
         expected_output='''
         #### Individual Prospect Profile: John Doe
@@ -645,7 +645,7 @@ if with_clear_container(submit_clicked):
             tasks=[task1],  # Tasks to be delegated and executed under the manager's supervision
             agents=[Researcher],
             manager_llm=llm,
-            process=Process.hierarchical  # Specifies the hierarchical management approach
+            process=Process.sequential  # Specifies the hierarchical management approach
         )
 
 
