@@ -59,12 +59,6 @@ st.title("JZ NewBizBot XL")
 
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
-avators = {"Researcher":"🔍",
-           "Followup Agent":"📝",
-            "Fact Check Agent":"❓"
-
-            }
-
 class TavilyTools(Toolkit):
     def __init__(
         self,
@@ -368,7 +362,7 @@ Factcheck_agent = Agent(
     You are an diligent fact checking expert, skilled in critical thinking and identifying erronous information.
     ''',
     goal='''
-    Verify the factual accuracy of the report. Specifically making sure that the information is not compiled from two people with the same name.
+    Make sure that the information is not compiled from two people with the same name.
     ''',
     tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
     llm=llm,
@@ -471,9 +465,6 @@ class StreamToExpander:
         elif task_match_input:
             task_value = task_match_input.group(1).strip()
 
-        if task_value:
-            st.toast(":robot_face: " + task_value)
-
         # Check if the text contains the specified phrase and apply color
         if "Entering new CrewAgentExecutor chain" in cleaned_data:
             # Apply different color and switch color index
@@ -483,6 +474,11 @@ class StreamToExpander:
         if "Researcher" in cleaned_data:
             # Apply different color 
             cleaned_data = cleaned_data.replace("Researcher", f"<span style='color:{self.colors[self.color_index]}'>Researcher</span>")
+        
+        if "Fact-Checking Agent" in cleaned_data:
+            # Apply different color 
+            cleaned_data = cleaned_data.replace("Fact-Checking Agent", f"<span style='color:{self.colors[self.color_index]}'>Fact-Checking Agent</span>")
+
 
         # Check if the text contains a new thought
         if "Thought:" in cleaned_data:
@@ -543,7 +539,7 @@ if with_clear_container(submit_clicked):
                 - Jane Smith, notable for her expertise in financial strategy; profile available on the organization’s [team page](https://www.helptheworldgrow.org/team)
                 - John Doe, notable for her expertise in financial strategy; profile available on the organization’s [team page](https://www.helptheworldgrow.org/team)
             - **Major Donors:**
-                - XYZ Corp: Engaged in various corporate philanthropy efforts, details [here](https://www.xyzcorp.com/philanthropy)
+                - XYZ Corp: Engaged in various corporate philanthropy efforts
                 - ABC Foundation: Long-term supporter, focusing on impactful projects
             - **Financial Disclosures:** Recent Form 990 indicates a surplus of `$200,000 in the last fiscal year. The report is accessible at [CauseIQ](https://www.causeiq.com/)
             - **Impact Highlights:** Recent projects have notably increased literacy rates in underserved regions
@@ -572,7 +568,7 @@ if with_clear_container(submit_clicked):
         )
 
         task2 = Task(
-        description=f"""Identify any missing information regarding {prompt}. Perform additional research to ensure your report is as comprehensive as possible""",
+        description=f"""Identify any relates entities regarding {prompt}. Perform additional research on up to 5 relates entities. These entities can be a company, related individual, or a instritution.""",
         agent=Followup_Agent,
         expected_output='''
             #### Individual Prospect Profile: John Doe
@@ -634,18 +630,16 @@ if with_clear_container(submit_clicked):
             """,
             agent=Factcheck_agent,
             expected_output='''
-            - A detailed report indicating the factual accuracy of each statement in the provided report.
-            - Identification and correction of any instances where information from different individuals with the same name has been conflated.
-            - Sources and references for all verified information.
+            Identification and correction of any instances where information from different individuals with the same name has been conflated.
             '''
         )
 
         # Establishing the crew with a hierarchical process
         project_crew = Crew(
-            tasks=[task1],  # Tasks to be delegated and executed under the manager's supervision
-            agents=[Researcher],
+            tasks=[task1,task3],  # Tasks to be delegated and executed under the manager's supervision
+            agents=[Researcher, Factcheck_agent],
             manager_llm=llm,
-            process=Process.sequential  # Specifies the hierarchical management approach
+            process=Process.hierarchical  # Specifies the hierarchical management approach
         )
 
 
