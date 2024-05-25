@@ -327,7 +327,7 @@ Researcher = Agent(
         Your service offerings include investment management, Outsourced Chief Investment Officer (OCIO) services, private banking, single-stock risk handling, and trust & estate planning. Leverage your expertise to provide analytical insights suitable for a diverse client base. Adopt a methodical and detail-oriented approach to ensure all pertinent financial details are covered comprehensively.
         ''',
     goal='''#### Objectives:
-        1. **For an Individual**: Gather and document information about the individual’s employment history, age, personal net worth, diverse income sources, family circumstances, and involvement in boards or charities. Hyperlinks to LinkedIn or other relevant professional pages should be included for verification of employment history.
+        1. **For an Individual**: Gather and document information about the individual’s employment history, age, personal net worth, diverse income sources, family circumstances, and involvement in boards or charities. Hyperlinks to relevant professional pages should be included for verification of employment history.
 
         2. **For a Nonprofit**: Compile the nonprofit’s asset details, highlight key board members/Tustees/Executives/Leadership, enumerate major donors, and review their financial transparency using links to platforms like [Cause IQ](https://www.causeiq.com/) and [ProPublica](https://www.propublica.org/) for access to recent Form 990s. Always use nonprofit_financials tool to get detailed and reliable information of the financial data after you have searched the web.
 
