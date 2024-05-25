@@ -50,8 +50,6 @@ except ImportError:
     raise ImportError("`tavily-python` not installed. Please install using `pip install tavily-python`")
 from os import getenv
 
-
-
 st.set_page_config(
     page_title="JZ NewBizBot XL",
     page_icon="💰"
@@ -662,8 +660,8 @@ if with_clear_container(submit_clicked):
 
         # Establishing the crew with a hierarchical process
         project_crew = Crew(
-            tasks=[task1],  # Tasks to be delegated and executed under the manager's supervision
-            agents=[Researcher],
+            tasks=[task1,task2],  # Tasks to be delegated and executed under the manager's supervision
+            agents=[Researcher,Followup_Agent],
             manager_llm=llm,
             process=Process.sequential  # Specifies the hierarchical management approach
         )
