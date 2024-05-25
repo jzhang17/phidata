@@ -361,15 +361,14 @@ additional context.
 
 
 Factcheck_agent = Agent(
-    role='Fact Check Agent',
-    backstory='''You are an expert in wealth and investment management, specializing in developing comprehensive client profiles across various sectors. 
-                Your task is to create detailed financial profiles of potential clients without strategizing. 
-                Utilize your expertise to produce informative profiles that will aid in crafting personalized financial management plans later. 
-                Include hyperlinks to essential financial data sources like Bloomberg, Forbes, and specific financial databases for additional context.
-                ''',
-    goal='''Compile the nonprofit’s asset details, highlight key Investment Committee members, enumerate major donors, and review their financial transparency using links to platforms like [Cause IQ](https://www.causeiq.com/) and [ProPublica](https://www.propublica.org/) for access to recent Form 990s.
+    role='Fact-Checking Agent',
+    backstory='''
+    You are an diligent fact checking expert, skilled in critical thinking and identifying erronous information.
     ''',
-    tools=[tavily_tool,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
+    goal='''
+    Verify the factual accuracy of the report. Specifically making sure that the information is not compiled from two people with the same name.
+    ''',
+    tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
     llm=llm,
     verbose=True
 )
@@ -631,37 +630,21 @@ if with_clear_container(submit_clicked):
         )
 
         task3 = Task(
-        description="""Generate a research report of relevent company memtioned. """,
-        agent=Factcheck_agent,
-        expected_output='''
-            #### Desired Output:
-            Produce detailed, structured profiles that meticulously capture the financial and personal complexities of potential clients. 
-            These profiles should be rich in data and neatly organized to serve as a foundational tool for subsequent personalized financial planning and advisory sessions. 
-            Ensure each profile incorporates relevant hyperlinks to substantiate the data collected or to offer further insights.
-            Sample Output:
-            #### Company Profile: Innovative Tech Solutions
-                - **Company Name:** Innovative Tech Solutions
-                - **Location:** San Diego
-                - **Summary:** Innovative Tech Solutions is a leading tech company that stands at the forefront of AI and machine learning technology, with strong financial performance and strategic plans for continued growth and innovation in the industry.
-                - **Industry:** Technology, specializing in AI and machine learning applications
-                - **CEO:** Robert Johnson, a visionary leader with over 20 years in the tech industry. Full bio available on [Bloomberg Executives](https://www.bloomberg.com/profile/person/xxxxx)
-                - **Founder:** Emily White, an entrepreneur recognized for her innovative approaches to technology development
-                - **Major Investors:** Includes prominent venture capital firms such as [VentureXYZ](https://www.venturexyz.com) and [CapitalABC](https://www.capitalabc.com)
-                - **Financial Performance Metrics:**
-                    - Current Valuation: `$50 million
-                    - Annual Revenue: `$10 million, demonstrating robust growth in the tech sector
-                    - Annual Profit: `$1 million, highlighting effective cost management and business operations
-                - **Recent News:** Innovative Tech Solutions has been awarded a patent for a groundbreaking AI algorithm that optimizes energy usage in large-scale manufacturing, as reported last month by Forbes. More details [here](https://www.forbes.com).
-                - **Additional Information:** 
-                    - Committed to sustainability, investing in green technologies
-                    - Aiming to reduce its carbon footprint over the next decade
-                    '''
+            description="""
+            Verify the factual accuracy of the provided report. Ensure that the information is correct and not compiled from two different individuals with the same name.
+            """,
+            agent=Factcheck_agent,
+            expected_output='''
+            - A detailed report indicating the factual accuracy of each statement in the provided report.
+            - Identification and correction of any instances where information from different individuals with the same name has been conflated.
+            - Sources and references for all verified information.
+            '''
         )
 
         # Establishing the crew with a hierarchical process
         project_crew = Crew(
-            tasks=[task1,task2],  # Tasks to be delegated and executed under the manager's supervision
-            agents=[Researcher,Followup_Agent],
+            tasks=[task1,task3],  # Tasks to be delegated and executed under the manager's supervision
+            agents=[Researcher,Factcheck_agent],
             manager_llm=llm,
             process=Process.sequential  # Specifies the hierarchical management approach
         )
