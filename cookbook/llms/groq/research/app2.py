@@ -609,7 +609,9 @@ if with_clear_container(submit_clicked):
         tasks=tasks,
         agents=agents,
         manager_llm=llm,
-        process=process
+        process=process,
+        full_output=True,
+        verbose=True,
     )
 
     stream_to_expander = StreamToExpander()
