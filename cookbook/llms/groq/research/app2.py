@@ -369,61 +369,6 @@ Factcheck_agent = Agent(
     verbose=True
 )
 
-def upload_file_to_cloudflare_r2(file_path, object_name):
-    """Upload a file to Cloudflare R2 Storage in the 'newbizbot' bucket, checking for duplicates and modifying the object name if necessary."""
-    # Use environment variables for Cloudflare API keys
-    access_key = os.getenv('CLOUDFLARE_ACCESS_KEY')
-    secret_key = os.getenv('CLOUDFLARE_SECRET_KEY')
-
-    # Endpoint for Cloudflare R2 storage
-    endpoint_url = 'https://44ae5977e790e0a48e71df40637d166a.r2.cloudflarestorage.com/'
-
-    # Hardcoded bucket name
-    bucket_name = 'newbizbot'
-
-    # Create a client for the Cloudflare R2 storage
-    session = boto3.session.Session()
-    s3_client = session.client('s3',
-                               region_name='auto',
-                               endpoint_url=endpoint_url,
-                               aws_access_key_id=access_key,
-                               aws_secret_access_key=secret_key,
-                               config=Config(signature_version='s3v4'))
-
-    # Extract the file name and folder path from the object name
-    file_name = os.path.basename(object_name)
-    folder_path = os.path.dirname(object_name)
-
-    # Define a method to generate a new object name with a number appended
-    def generate_new_object_name(index):
-        base_name, extension = os.path.splitext(file_name)
-        return f"{base_name}_{index}{extension}"
-
-    # Start checking for existing files and generate new object name if necessary
-    index = 1
-    new_object_name = file_name
-    while True:
-        try:
-            s3_client.head_object(Bucket=bucket_name, Key=os.path.join(folder_path, new_object_name))
-            new_object_name = generate_new_object_name(index)
-            index += 1
-        except s3_client.exceptions.ClientError as e:
-            if int(e.response['Error']['Code']) == 404:
-                break  # Object does not exist, and we can use this name
-            else:
-                raise  # Some other error, raise it
-
-    # Update the object name with the potentially new file name
-    object_name = os.path.join(folder_path, new_object_name)
-
-    # Upload the file
-    with open(file_path, "rb") as file:
-        s3_client.upload_fileobj(file, bucket_name, object_name)
-        print(f"File uploaded successfully to {object_name}")
-
-query_params = st.query_params
-input_value = query_params.get('input', 'Bill Gates')
-
 
 class StreamToExpander:
     def __init__(self):
@@ -507,12 +452,15 @@ additional_agents_tasks = st.sidebar.selectbox(
     ["None", "Followup Agent", "Fact-Checking Agent"]
 )
 
+query_params = st.query_params
+input_value = query_params.get('input', 'Bill Gates')
+
 with st.form(key="form"):
     user_input = ""
 
-if not user_input:
-    user_input = st.text_input("Enter the name of a prospect or intermediary, can be a person, company or non-profit:", value=input_value)
-submit_clicked = st.form_submit_button("Generate Report")
+    if not user_input:
+        user_input = st.text_input("Enter the name of a prospect or intermediary, can be a person, company or non-profit:", value=input_value)
+    submit_clicked = st.form_submit_button("Generate Report")
 
 output_container = st.empty()
 # Check if submit button was clicked and clear container if needed
