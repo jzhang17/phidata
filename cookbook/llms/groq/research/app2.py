@@ -446,11 +446,9 @@ class StreamToExpander:
 st.sidebar.header("Configuration")
 process_type = st.sidebar.selectbox("Select Process Type", ["Sequential", "Hierarchical"])
 
-# Select box for additional agents and tasks
-additional_agents_tasks = st.sidebar.selectbox(
-    "Select Additional Agents and Tasks",
-    ["None", "Followup Agent", "Fact-Checking Agent"]
-)
+# Checkbox for additional agents and tasks
+followup_agent_select = st.sidebar.checkbox("Followup Agent")
+fact_checking_agent_select = st.sidebar.checkbox("Fact-Checking Agent")
 
 query_params = st.query_params
 input_value = query_params.get('input', 'Bill Gates')
@@ -600,11 +598,10 @@ if with_clear_container(submit_clicked):
     agents = [Researcher]
     tasks = [task1]
 
-    # Add selected additional agents and tasks
-    if additional_agents_tasks == "Followup Agent":
+    if followup_agent_select:
         agents.append(Followup_Agent)
         tasks.append(task2)
-    elif additional_agents_tasks == "Fact-Checking Agent":
+    if fact_checking_agent_select:
         agents.append(Factcheck_agent)
         tasks.append(task3)
 
