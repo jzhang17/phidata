@@ -56,7 +56,6 @@ st.set_page_config(
 )
 st.title("JZ NewBizBot XL")
 
-
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
 class TavilyTools(Toolkit):
@@ -330,7 +329,6 @@ Researcher = Agent(
         ''',
     tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # This can be optionally specified; defaults to an empty list
     llm=llm,
-    verbose=True
     )
 
 Followup_Agent = Agent(
@@ -365,9 +363,8 @@ Factcheck_agent = Agent(
     Make sure that the information is not compiled from two people with the same name.
     ''',
     tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
-    llm=llm,
-    verbose=True
-)
+    llm=llm
+    )
 
 
 class StreamToExpander:
@@ -420,11 +417,21 @@ class StreamToExpander:
             # Apply different color 
             cleaned_data = cleaned_data.replace("Fact-Checking Agent", f"<span style='color:{self.colors[self.color_index]}'>Fact-Checking Agent</span>")
 
+        # Check if the text contains a new thought or debug information
+        if "[DEBUG]:" in cleaned_data:
+            self.current_expander = st.expander(f"Executing Intermediate Step", expanded=True)
+            self.expanders.append(self.current_expander)
+            self.buffer = []
+
         # Check if the text contains a new thought
         if "Thought:" in cleaned_data:
             self.current_expander = st.expander(f"Executing Intermediate Step", expanded=True)
             self.expanders.append(self.current_expander)
             self.buffer = []
+
+        # Check if the text contains task output
+        if "Task output:" in cleaned_data:
+            cleaned_data = cleaned_data.replace("Task output:", "Task output:\n\n")
 
         if self.current_expander is None:
             self.current_expander = st.expander(f"Starting Search", expanded=True)
@@ -437,17 +444,12 @@ class StreamToExpander:
             self.current_expander.markdown(''.join(self.buffer), unsafe_allow_html=True)
             self.buffer = []
 
-
     def flush(self):
         pass  # No operation for flushing needed
 
-# Streamlit sidebar
-st.sidebar.header("Configuration")
-process_type = st.sidebar.selectbox("Select Process Type", ["Sequential", "Hierarchical"])
 
-# Checkbox for additional agents and tasks
-followup_agent_select = st.sidebar.checkbox("Followup Agent")
-fact_checking_agent_select = st.sidebar.checkbox("Fact-Checking Agent")
+# Checkbox for comprehensive mode
+comprehensive_mode = st.checkbox("Enable Comprehensive Mode (experimental, takes longer)")
 
 query_params = st.query_params
 input_value = query_params.get('input', 'Bill Gates')
@@ -474,7 +476,7 @@ if with_clear_container(submit_clicked):
             - **Age:** 45
             - **Location:** New York
             - **Net Worth:** Approximately `$2 million, verified by [WealthX](https://www.wealthx.com/)
-            - **Occupation:** Tech Entrepreneur with a focus on innovative software solutions. View the LinkedIn Profile: [John Doe](https://www.linkedin.com/in/johndoe/)
+            - **Occupation:** Tech Entrepreneur with a focus on innovative software solutions. 
             - **Family Dynamics:** Married with two children, emphasizing a balanced work-life integration
             - **Board Affiliations:** Active in philanthropic ventures; serves on the boards of:
                 - XYZ Nonprofit: Promoting educational initiatives. More details [here](https://www.xyznonprofit.org)
@@ -489,7 +491,6 @@ if with_clear_container(submit_clicked):
             - **Organization Name:** Help the World Grow
             - **Location:** Los Angeles, CA
             - **Summary:** Help the World Grow is a robust nonprofit organization with a global reach, actively working to enhance educational outcomes and reduce inequalities through strategic partnerships and impactful initiatives.
-            - **Mission:** Dedicated to fostering educational opportunities and reducing inequality worldwide
             - **Asset Size:** Estimated at `$5 million
             - **Key Members:** 
                 - Jane Smith, notable for her expertise in financial strategy; profile available on the organization’s [team page](https://www.helptheworldgrow.org/team)
@@ -524,7 +525,7 @@ if with_clear_container(submit_clicked):
         )
 
         task2 = Task(
-        description=f"""Identify any relates entities regarding {prompt}. Perform additional research on up to 5 relates entities. These entities can be a company, related individual, or a instritution.""",
+        description=f"""Identify any relates entities or missing information regarding {prompt}. Perform additional research on up to 3 relates entities. These entities can be a company, related individual, or a instritution.""",
         agent=Followup_Agent,
         expected_output='''
         #### Individual Prospect Profile: John Doe
@@ -590,19 +591,15 @@ if with_clear_container(submit_clicked):
             '''
         )
 
-                # Convert process type to Process enum
-    process = Process.sequential if process_type == "Sequential" else Process.hierarchical
-
-    # Ensure mandatory Researcher and Task 1 are included
-    agents = [Researcher]
-    tasks = [task1]
-
-    if followup_agent_select:
-        agents.append(Followup_Agent)
-        tasks.append(task2)
-    if fact_checking_agent_select:
-        agents.append(Factcheck_agent)
-        tasks.append(task3)
+    # Set process type and agents based on comprehensive mode
+    if comprehensive_mode:
+        process = Process.hierarchical
+        agents = [Researcher, Followup_Agent]
+        tasks = [task1, task2]
+    else:
+        process = Process.sequential
+        agents = [Researcher]
+        tasks = [task1]
 
     # Crew definition
     project_crew = Crew(
@@ -610,8 +607,16 @@ if with_clear_container(submit_clicked):
         agents=agents,
         manager_llm=llm,
         process=process,
-        full_output=True,
-        verbose=2
+        verbose=True
+    )
+
+    # Crew definition
+    project_crew = Crew(
+        tasks=tasks,
+        agents=agents,
+        manager_llm=llm,
+        process=process,
+        verbose=True
     )
 
     stream_to_expander = StreamToExpander()
