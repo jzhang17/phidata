@@ -611,7 +611,7 @@ if with_clear_container(submit_clicked):
         manager_llm=llm,
         process=process,
         full_output=True,
-        verbose=True,
+        verbose=2
     )
 
     stream_to_expander = StreamToExpander()
