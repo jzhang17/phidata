@@ -195,7 +195,7 @@ def scrape_webpages(urls: List[str]) -> str:
         # Resize images in the current content
         resized_content = resize_images(content)
         combined_content += resized_content
-        if len(combined_content) > 25000:
+        if len(combined_content) > 10000:
             break
             
     return combined_content[:50000]  # Limit the output to the first 50,000 characters
@@ -425,13 +425,6 @@ query_params = st.query_params
 input_value = query_params.get('input', 'Bill Gates')
 
 
-with st.form(key="form"):
-    user_input = ""
-
-    if not user_input:
-        user_input = st.text_input("Enter the name of a prospect or intermediary, can be a person, company or non-profit:", value=input_value)
-    submit_clicked = st.form_submit_button("Generate Report")
-
 class StreamToExpander:
     def __init__(self):
         self.expanders = []
@@ -479,7 +472,6 @@ class StreamToExpander:
             # Apply different color 
             cleaned_data = cleaned_data.replace("Fact-Checking Agent", f"<span style='color:{self.colors[self.color_index]}'>Fact-Checking Agent</span>")
 
-
         # Check if the text contains a new thought
         if "Thought:" in cleaned_data:
             self.current_expander = st.expander(f"Executing Intermediate Step", expanded=True)
@@ -502,10 +494,29 @@ class StreamToExpander:
         pass  # No operation for flushing needed
 
 
+
+
+
+# Streamlit sidebar
+st.sidebar.header("Configuration")
+process_type = st.sidebar.selectbox("Select Process Type", ["Sequential", "Hierarchical"])
+
+# Select box for additional agents and tasks
+additional_agents_tasks = st.sidebar.selectbox(
+    "Select Additional Agents and Tasks",
+    ["None", "Followup Agent", "Fact-Checking Agent"]
+)
+
+with st.form(key="form"):
+    user_input = ""
+
+if not user_input:
+    user_input = st.text_input("Enter the name of a prospect or intermediary, can be a person, company or non-profit:", value=input_value)
+submit_clicked = st.form_submit_button("Generate Report")
+
 output_container = st.empty()
 # Check if submit button was clicked and clear container if needed
 if with_clear_container(submit_clicked):
-
     if prompt := user_input:
         st.session_state["messages"] = [{"role": "user", "content": prompt}]
         task1 = Task(
@@ -634,29 +645,39 @@ if with_clear_container(submit_clicked):
             '''
         )
 
-        # Establishing the crew with a hierarchical process
-        project_crew = Crew(
-            tasks=[task1,task3],  # Tasks to be delegated and executed under the manager's supervision
-            agents=[Researcher, Factcheck_agent],
-            manager_llm=llm,
-            process=Process.hierarchical  # Specifies the hierarchical management approach
-        )
+                # Convert process type to Process enum
+    process = Process.sequential if process_type == "Sequential" else Process.hierarchical
 
+    # Ensure mandatory Researcher and Task 1 are included
+    agents = [Researcher]
+    tasks = [task1]
 
-    # If we've saved this question, play it back instead of actually running LangChain
-    # (so that we don't exhaust our API calls unnecessarily)
+    # Add selected additional agents and tasks
+    if additional_agents_tasks == "Followup Agent":
+        agents.append(Followup_Agent)
+        tasks.append(task2)
+    elif additional_agents_tasks == "Fact-Checking Agent":
+        agents.append(Factcheck_agent)
+        tasks.append(task3)
 
+    # Crew definition
+    project_crew = Crew(
+        tasks=tasks,
+        agents=agents,
+        manager_llm=llm,
+        process=process
+    )
 
-        stream_to_expander = StreamToExpander()
-        sys.stdout = stream_to_expander
-        with st.spinner("Generating Results"):
-            crew_result = project_crew.kickoff()
+    stream_to_expander = StreamToExpander()
+    sys.stdout = stream_to_expander
+    with st.spinner("Generating Results"):
+        crew_result = project_crew.kickoff()
 
-        dp_assistant = get_dp_assistant(model="llama3-70b-8192")
-        spacing = "\n\n---\n\n"
-        dp_report = ""
-        for delta in dp_assistant.run(crew_result):
-            dp_report += delta  # type: ignore)
+    dp_assistant = get_dp_assistant(model="llama3-70b-8192")
+    spacing = "\n\n---\n\n"
+    dp_report = ""
+    for delta in dp_assistant.run(crew_result):
+        dp_report += delta  # type: ignore)
 
-        st.header("Results:")
-        st.markdown(crew_result.replace("$","\$") + spacing + dp_report)
+    st.header("Results:")
+    st.markdown(crew_result.replace("$","\$") + spacing + dp_report)
