@@ -403,6 +403,9 @@ class StreamToExpander:
         elif task_match_input:
             task_value = task_match_input.group(1).strip()
 
+        if task_value:
+            st.toast(":robot_face: " + task_value)
+
         # Check if the text contains the specified phrase and apply color
         if "Entering new CrewAgentExecutor chain" in cleaned_data:
             # Apply different color and switch color index
@@ -437,10 +440,6 @@ class StreamToExpander:
 
     def flush(self):
         pass  # No operation for flushing needed
-
-
-
-
 
 # Streamlit sidebar
 st.sidebar.header("Configuration")
@@ -528,7 +527,7 @@ if with_clear_container(submit_clicked):
         description=f"""Identify any relates entities regarding {prompt}. Perform additional research on up to 5 relates entities. These entities can be a company, related individual, or a instritution.""",
         agent=Followup_Agent,
         expected_output='''
-            #### Individual Prospect Profile: John Doe
+        #### Individual Prospect Profile: John Doe
             - **Name:** John Doe
             - **Summary:** John Doe is a seasoned tech entrepreneur with a demonstrated history of success in the tech industry and a strong commitment to philanthropy. His current focus is on innovative solutions that address key societal challenges.
             - **Age:** 45
