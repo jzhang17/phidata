@@ -95,7 +95,7 @@ class TavilyTools(Toolkit):
             else:
                 self.register(self.web_search_using_tavily)
 
-    def web_search_using_tavily(self, query: str, max_results: int = 5) -> str:
+    def web_search_using_tavily(self, query: str, max_results: int = 7) -> str:
         """Use this function to search the web for a given query.
         This function uses the Tavily API to provide realtime online information about the query.
 
@@ -337,95 +337,6 @@ Researcher = Agent(
     llm=llm,
     verbose=True
     )
-
-Followup_Agent = Agent(
-    role='Followup Agent',
-    backstory='''### Expert Instruction:
-You are an expert in wealth and investment management, specializing in developing comprehensive client profiles across various sectors. Your task is to read the current report, identify missing information, and perform further research to find out more information. Make sure to include sources and corresponding hyperlinks for any new data you add.
-
-### Context:
-Your service offerings include investment management, Outsourced Chief Investment Officer (OCIO) services, private banking, single-stock risk handling, and trust & estate planning. Leverage your expertise to provide analytical insights suitable for a diverse client base. Adopt a methodical and detail-oriented approach to ensure all pertinent financial details are covered comprehensively.
-additional context.
-                ''',
-    goal='''
-### Objectives:
-1. **For an Individual**: Gather and add information about the individual's employment history, age, personal net worth, diverse income sources, family circumstances, and involvement in boards or charities if this information is missing. Make sure to include sources and hyperlinks.
-
-2. **For a Nonprofit**: Make sure to include all members of the board of trustees and detailed financials if these details are missing. Provide sources and hyperlinks for all information gathered.
-
-3. **For a Company**: Ensure to include information about top executives, primary investors, valuation, revenue, and profitability if absent. Include sources and hyperlinks for each piece of added information
-    ''',
-    tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
-    llm=llm,
-    verbose=True
-)
-
-
-Factcheck_agent = Agent(
-    role='Fact Check Agent',
-    backstory='''You are an expert in wealth and investment management, specializing in developing comprehensive client profiles across various sectors. 
-                Your task is to create detailed financial profiles of potential clients without strategizing. 
-                Utilize your expertise to produce informative profiles that will aid in crafting personalized financial management plans later. 
-                Include hyperlinks to essential financial data sources like Bloomberg, Forbes, and specific financial databases for additional context.
-                ''',
-    goal='''Compile the nonprofit’s asset details, highlight key Investment Committee members, enumerate major donors, and review their financial transparency using links to platforms like [Cause IQ](https://www.causeiq.com/) and [ProPublica](https://www.propublica.org/) for access to recent Form 990s.
-    ''',
-    tools=[tavily_tool,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
-    llm=llm,
-    verbose=True
-)
-
-def upload_file_to_cloudflare_r2(file_path, object_name):
-    """Upload a file to Cloudflare R2 Storage in the 'newbizbot' bucket, checking for duplicates and modifying the object name if necessary."""
-    # Use environment variables for Cloudflare API keys
-    access_key = os.getenv('CLOUDFLARE_ACCESS_KEY')
-    secret_key = os.getenv('CLOUDFLARE_SECRET_KEY')
-
-    # Endpoint for Cloudflare R2 storage
-    endpoint_url = 'https://44ae5977e790e0a48e71df40637d166a.r2.cloudflarestorage.com/'
-
-    # Hardcoded bucket name
-    bucket_name = 'newbizbot'
-
-    # Create a client for the Cloudflare R2 storage
-    session = boto3.session.Session()
-    s3_client = session.client('s3',
-                               region_name='auto',
-                               endpoint_url=endpoint_url,
-                               aws_access_key_id=access_key,
-                               aws_secret_access_key=secret_key,
-                               config=Config(signature_version='s3v4'))
-
-    # Extract the file name and folder path from the object name
-    file_name = os.path.basename(object_name)
-    folder_path = os.path.dirname(object_name)
-
-    # Define a method to generate a new object name with a number appended
-    def generate_new_object_name(index):
-        base_name, extension = os.path.splitext(file_name)
-        return f"{base_name}_{index}{extension}"
-
-    # Start checking for existing files and generate new object name if necessary
-    index = 1
-    new_object_name = file_name
-    while True:
-        try:
-            s3_client.head_object(Bucket=bucket_name, Key=os.path.join(folder_path, new_object_name))
-            new_object_name = generate_new_object_name(index)
-            index += 1
-        except s3_client.exceptions.ClientError as e:
-            if int(e.response['Error']['Code']) == 404:
-                break  # Object does not exist, and we can use this name
-            else:
-                raise  # Some other error, raise it
-
-    # Update the object name with the potentially new file name
-    object_name = os.path.join(folder_path, new_object_name)
-
-    # Upload the file
-    with open(file_path, "rb") as file:
-        s3_client.upload_fileobj(file, bucket_name, object_name)
-        print(f"File uploaded successfully to {object_name}")
 
 query_params = st.query_params
 input_value = query_params.get('input', 'Bill Gates')
