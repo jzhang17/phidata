@@ -449,7 +449,7 @@ class StreamToExpander:
 
 
 # Checkbox for comprehensive mode
-comprehensive_mode = st.checkbox("Enable Comprehensive Mode (experimental, takes longer)")
+comprehensive_mode = st.checkbox("Enable Comprehensive Mode (experimental, takes longer, not all intermediate steps will show)")
 
 query_params = st.query_params
 input_value = query_params.get('input', 'Bill Gates')
@@ -525,7 +525,7 @@ if with_clear_container(submit_clicked):
         )
 
         task2 = Task(
-        description=f"""Identify any relates entities or missing information regarding {prompt}. Perform additional research on up to 3 relates entities. These entities can be a company, related individual, or a instritution.""",
+        description=f"""Identify any relates entities or missing information regarding {prompt}. Perform additional research on up to 3 relates entities that is most closely related to {prompt}. These entities can be a company, related individual, or a instritution.""",
         agent=Followup_Agent,
         expected_output='''
         #### Individual Prospect Profile: John Doe
@@ -600,15 +600,6 @@ if with_clear_container(submit_clicked):
         process = Process.sequential
         agents = [Researcher]
         tasks = [task1]
-
-    # Crew definition
-    project_crew = Crew(
-        tasks=tasks,
-        agents=agents,
-        manager_llm=llm,
-        process=process,
-        verbose=True
-    )
 
     # Crew definition
     project_crew = Crew(
