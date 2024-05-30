@@ -329,6 +329,7 @@ Researcher = Agent(
         ''',
     tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # This can be optionally specified; defaults to an empty list
     llm=llm,
+    verbose=True
     )
 
 Followup_Agent = Agent(
