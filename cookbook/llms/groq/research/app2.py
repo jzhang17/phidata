@@ -194,10 +194,10 @@ def scrape_webpages(urls: List[str]) -> str:
         # Resize images in the current content
         resized_content = resize_images(content)
         combined_content += resized_content
-        if len(combined_content) > 10000:
+        if len(combined_content) > 100000:
             break
             
-    return combined_content[:50000]  # Limit the output to the first 50,000 characters
+    return combined_content[:100000]  # Limit the output to the first 50,000 characters
 
 
 @tool
