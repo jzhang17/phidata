@@ -57,7 +57,7 @@ st.set_page_config(
     page_title="JZ NewBizBot",
     page_icon="💰"
 )
-st.title("JZ NewBizBot v5")
+st.title("JZ NewBizBot v6")
 
 
 # Add a dropdown to select the model
