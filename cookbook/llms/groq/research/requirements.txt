@@ -192,3 +192,5 @@ beautifulsoup4
 crewai==0.30.11
 embedchain==0.1.103
 pysqlite3-binary
+langchain_anthropic
+PyPDF2

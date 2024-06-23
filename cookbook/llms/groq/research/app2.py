@@ -49,14 +49,28 @@ try:
 except ImportError:
     raise ImportError("`tavily-python` not installed. Please install using `pip install tavily-python`")
 from os import getenv
+from langchain_anthropic import ChatAnthropic
+from PyPDF2 import PdfFileReader
+
 
 st.set_page_config(
     page_title="JZ NewBizBot XL",
     page_icon="💰"
 )
+
 st.title("JZ NewBizBot XL")
 
-llm = ChatOpenAI(model="gpt-4o", temperature=0)
+# Add a dropdown to select the model
+model_option = st.selectbox(
+    'Choose a model:',
+    ('Claude-3.5-Sonnet','GPT-4o')
+)
+
+# Initialize the LLM based on the selected model
+if model_option == 'GPT-4o':
+    llm = ChatOpenAI(model="gpt-4o", temperature=0)
+elif model_option == 'Claude-3.5-Sonnet':
+    llm = ChatAnthropic(model="claude-3-5-sonnet-20240620", temperature=0)
 
 class TavilyTools(Toolkit):
     def __init__(
@@ -166,6 +180,8 @@ class TavilyTools(Toolkit):
         return self.client.get_search_context(
             query=query, search_depth=self.search_depth, max_tokens=self.max_tokens, include_answer=self.include_answer
         )
+
+
 
 @tool
 def tavily_tool(query):
@@ -289,25 +305,27 @@ def nonprofit_financials(nonprofit_name):
 
 @tool
 def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> str:
-    """Research the in PDF file and return its content for analysis."""
+    """Research the PDF file and return its content for analysis."""
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
+    
     # Download the PDF with headers
     response = requests.get(url, headers=headers)
-    if response.status_code == 200:
-        with open(local_path, 'wb') as file:
-            file.write(response.content)
-    else:
+    if response.status_code != 200:
         raise ValueError(f"Failed to download file: status code {response.status_code}")
-    reader = PyPDFLoader(local_path)
+    
+    with open(local_path, 'wb') as file:
+        file.write(response.content)
+    
+    # Read the PDF file
     text = ""
-    # Extract text from each page and accumulate until 50,000 tokens
-    for page in reader.pages:
-        text += page.extract_text()
-        if len(text.split()) >= 50000:
-            text = ' '.join(text.split()[:50000])
-            break
+    with open(local_path, 'rb') as pdf_file:
+        reader = PdfFileReader(pdf_file)
+        for page_num in range(reader.numPages):
+            page = reader.getPage(page_num)
+            text += page.extract_text()
+    
     return text
 
 Researcher = Agent(
@@ -499,7 +517,7 @@ if with_clear_container(submit_clicked):
             - **Major Donors:**
                 - XYZ Corp: Engaged in various corporate philanthropy efforts
                 - ABC Foundation: Long-term supporter, focusing on impactful projects
-            - **Financial Disclosures:** Recent Form 990 indicates a surplus of `$200,000 in the last fiscal year. The report is accessible at [CauseIQ](https://www.causeiq.com/)
+            - **Financials:** Recent Form 990 indicates a surplus of `$200,000 in the last fiscal year. The report is accessible at [CauseIQ](https://www.causeiq.com/)
             - **Impact Highlights:** Recent projects have notably increased literacy rates in underserved regions
             - **Recent News:** The organization has launched a new initiative in partnership with local governments in South America to enhance educational infrastructure, reported last week by CNN. Full story [here](https://www.cnn.com).
             - **Additional Information:** 
