@@ -59,68 +59,6 @@ st.set_page_config(
     page_icon="💰"
     )
 
-# Custom CSS for responsive layout
-custom_css = """
-<style>
-    .reportview-container .main .block-container {
-        max-width: 800px;  /* Narrower content in regular mode */
-        padding-top: 2rem;
-        padding-right: 0rem;
-        padding-left: 0em;
-        padding-bottom: 2rem;
-        margin: 0 auto;  /* Center the content */
-    }
-    @media (max-width: 1300px) {  /* Changed from 768px to 600px */
-        .reportview-container .main .block-container {
-            max-width: 100%;  /* Full width on small screens */
-            padding-top: 1rem;
-            padding-right: 0rem;
-            padding-left: 0rem;
-            padding-bottom: 1rem;
-        }
-    }
-    /* Additional styles for wide mode */
-    .wide-mode .reportview-container .main .block-container {
-        max-width: 100%;
-        padding-left: 0;
-        padding-right: 0;
-    }
-</style>
-"""
-
-# JavaScript for dynamic layout adjustment
-layout_adjustment_js = """
-<script>
-function adjustLayout() {
-    const wideMode = window.innerWidth <= 1290;  ]
-    const layoutToggle = window.localStorage.getItem('wideMode');
-    
-    if (wideMode !== (layoutToggle === 'true')) {
-        window.localStorage.setItem('wideMode', wideMode);
-        if (wideMode) {
-            document.body.classList.add('wide-mode');
-        } else {
-            document.body.classList.remove('wide-mode');
-        }
-        // Force a re-render of the Streamlit app
-        setTimeout(() => {
-            window.dispatchEvent(new Event('resize'));
-        }, 100);
-    }
-}
-
-// Run on page load
-adjustLayout();
-
-// Run on window resize
-window.addEventListener('resize', adjustLayout);
-</script>
-"""
-
-# Inject custom CSS and JavaScript
-st.markdown(custom_css, unsafe_allow_html=True)
-st.markdown(layout_adjustment_js, unsafe_allow_html=True)
-
 st.title("JZ NewBizBot XL")
 
 # Add a dropdown to select the model
