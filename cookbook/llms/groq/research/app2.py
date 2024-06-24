@@ -53,10 +53,65 @@ from langchain_anthropic import ChatAnthropic
 from PyPDF2 import PdfFileReader
 
 
+
 st.set_page_config(
     page_title="JZ NewBizBot XL",
     page_icon="💰"
-)
+    )
+
+# Custom CSS for responsive layout
+custom_css = """
+<style>
+    .reportview-container .main .block-container {
+        max-width: 1200px;
+        padding-top: 5rem;
+        padding-right: 1rem;
+        padding-left: 1rem;
+        padding-bottom: 5rem;
+    }
+    @media (max-width: 768px) {
+        .reportview-container .main .block-container {
+            padding-top: 2rem;
+            padding-right: 0.1rem;
+            padding-left: 0.1rem;
+            padding-bottom: 2rem;
+        }
+    }
+</style>
+"""
+
+# JavaScript for dynamic layout adjustment
+layout_adjustment_js = """
+<script>
+function adjustLayout() {
+    const wideMode = window.innerWidth <= 768;
+    const layoutToggle = window.localStorage.getItem('wideMode');
+    
+    if (wideMode !== (layoutToggle === 'true')) {
+        window.localStorage.setItem('wideMode', wideMode);
+        if (wideMode) {
+            document.body.classList.add('wide-mode');
+        } else {
+            document.body.classList.remove('wide-mode');
+        }
+        // Force a re-render of the Streamlit app
+        setTimeout(() => {
+            window.dispatchEvent(new Event('resize'));
+        }, 100);
+    }
+}
+
+// Run on page load
+adjustLayout();
+
+// Run on window resize
+window.addEventListener('resize', adjustLayout);
+</script>
+"""
+
+# Inject custom CSS and JavaScript
+st.markdown(custom_css, unsafe_allow_html=True)
+st.markdown(layout_adjustment_js, unsafe_allow_html=True)
 
 st.title("JZ NewBizBot XL")
 
@@ -164,7 +219,6 @@ class TavilyTools(Toolkit):
             if webpage_links:
                 _markdown += f"Links for scrape_webpages tool: {webpage_links}\n"
             return _markdown
-
 
     def web_search_with_tavily(self, query: str) -> str:
         """Use this function to search the web for a given query.
