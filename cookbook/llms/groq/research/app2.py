@@ -63,19 +63,27 @@ st.set_page_config(
 custom_css = """
 <style>
     .reportview-container .main .block-container {
-        max-width: 1200px;
-        padding-top: 5rem;
-        padding-right: 1rem;
-        padding-left: 1rem;
-        padding-bottom: 5rem;
+        max-width: 800px;  /* Narrower content in regular mode */
+        padding-top: 2rem;
+        padding-right: 0rem;
+        padding-left: 0em;
+        padding-bottom: 2rem;
+        margin: 0 auto;  /* Center the content */
     }
-    @media (max-width: 768px) {
+    @media (max-width: 1300px) {  /* Changed from 768px to 600px */
         .reportview-container .main .block-container {
-            padding-top: 2rem;
-            padding-right: 0.1rem;
-            padding-left: 0.1rem;
-            padding-bottom: 2rem;
+            max-width: 100%;  /* Full width on small screens */
+            padding-top: 1rem;
+            padding-right: 0rem;
+            padding-left: 0rem;
+            padding-bottom: 1rem;
         }
+    }
+    /* Additional styles for wide mode */
+    .wide-mode .reportview-container .main .block-container {
+        max-width: 100%;
+        padding-left: 0;
+        padding-right: 0;
     }
 </style>
 """
@@ -84,7 +92,7 @@ custom_css = """
 layout_adjustment_js = """
 <script>
 function adjustLayout() {
-    const wideMode = window.innerWidth <= 768;
+    const wideMode = window.innerWidth <= 1290;  ]
     const layoutToggle = window.localStorage.getItem('wideMode');
     
     if (wideMode !== (layoutToggle === 'true')) {
