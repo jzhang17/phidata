@@ -251,7 +251,7 @@ def pdf_reader(pdf_url):
         time.sleep(2)
         
         # Convert PDF to images
-        images = convert_from_bytes(pdf_content, dpi=200)
+        images = convert_from_bytes(pdf_content, dpi=200,poppler_path="/usr/bin")
         
         # Convert images to text
         client = Anthropic(api_key=anthropic_api_key)
