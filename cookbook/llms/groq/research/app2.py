@@ -51,7 +51,15 @@ except ImportError:
 from os import getenv
 from langchain_anthropic import ChatAnthropic
 from PyPDF2 import PdfFileReader
+import base64
+from pdf2image import convert_from_bytes
+from io import BytesIO
+from PIL import Image
+from anthropic import Anthropic
+import time
 
+
+anthropic_api_key = os.getenv('ANTHROPIC_API_KEY') # replace with your API key from anthropic website or use environment variable if available in the codebase
 
 
 st.set_page_config(
@@ -213,13 +221,116 @@ def scrape_webpages(urls: List[str]) -> str:
         if len(combined_content) > 100000:
             break
             
-    return combined_content[:100000]  # Limit the output to the first 50,000 characters
+    return combined_content[:100000]  # Limit the output to the first 50,000 characters    
+
+@tool
+def pdf_reader(pdf_url):
+    '''
+    Extracts text from a PDF at the given URL and returns it in Markdown format. Input a valid PDF URL to receive the full text content of the document formatted as Markdown. Always use this tool for form 990 Filings.
+    '''
+    custom_headers = None
+    content_placeholder = st.empty()
+    full_text = "# PDF Content\n\n"
+    error_occurred = False
+
+    try:
+        # Set up headers
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        if custom_headers:
+            headers.update(custom_headers)
+
+        # Download PDF with redirect handling
+        session = requests.Session()
+        response = session.get(pdf_url, headers=headers, allow_redirects=True)
+        response.raise_for_status()
+        pdf_content = response.content
+        
+        # Add a sleep after getting the PDF
+        time.sleep(2)
+        
+        # Convert PDF to images
+        images = convert_from_bytes(pdf_content, dpi=200)
+        
+        # Convert images to text
+        client = Anthropic(api_key=anthropic_api_key)
+        
+        content_placeholder.markdown(full_text)
+        
+        for i, image in enumerate(images):
+            try:
+                buffered = BytesIO()
+                image.save(buffered, format="PNG")
+                image_base64 = base64.b64encode(buffered.getvalue()).decode()
+                
+                stream = client.messages.create(
+                    model="claude-3-haiku-20240307",
+                    max_tokens=1000,
+                    temperature=0,
+                    stream=True,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Transcribe the content of this image in detail, providing a comprehensive textual representation of what you see. Format your response in Markdown."
+                                },
+                                {
+                                    "type": "image",
+                                    "source": {
+                                        "type": "base64",
+                                        "media_type": "image/png",
+                                        "data": image_base64
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                )
+                
+                full_text += f"## Page {i+1}\n\n"
+                content_placeholder.markdown(full_text)
+                
+                for chunk in stream:
+                    if hasattr(chunk, 'delta'):
+                        if hasattr(chunk.delta, 'text'):
+                            chunk_text = chunk.delta.text.replace("$", "\$").replace("```", "\n")
+                            full_text += chunk_text
+                            content_placeholder.markdown(full_text)
+                        elif hasattr(chunk.delta, 'content'):
+                            for content in chunk.delta.content:
+                                if hasattr(content, 'text'):
+                                    content_text = content.text.replace("$", "\$").replace("```", "")
+                                    full_text += content_text
+                                    content_placeholder.markdown(full_text)
+                
+                full_text += "\n\n"
+                content_placeholder.markdown(full_text)
+            except Exception as e:
+                error_occurred = True
+                full_text += f"Error processing page {i+1}: {str(e)}\n\n"
+                content_placeholder.markdown(full_text)
+
+    except Exception as e:
+        error_occurred = True
+        full_text += f"An error occurred while processing the PDF: {str(e)}\n\n"
+        content_placeholder.markdown(full_text)
+
+    finally:
+        if error_occurred:
+            full_text += "\nNote: Some errors occurred during processing. The content may be incomplete.\n"
+        else:
+            full_text += "\nPDF processing completed successfully.\n"
+        content_placeholder.markdown(full_text)
+        return full_text
+
 
 
 @tool
 def nonprofit_financials(nonprofit_name):
-    """Get only structured financial data for nonprofits. This tool prefers EIN as input."""
-
+    """Get structured financial data and latest filing PDF content for nonprofits. This tool prefers EIN as input."""
     
     base_url = "https://projects.propublica.org/nonprofits/api/v2"
     
@@ -299,34 +410,9 @@ def nonprofit_financials(nonprofit_name):
     markdown += "\n#### Latest Filing Details\n"
     for key, value in overview['latest_filing'].items():
         markdown += f"- **{key.replace('_', ' ')}:** {value}\n"
-    
-    return markdown
-    
 
-@tool
-def load_pdf(url: str, local_path: str = "downloaded_file.pdf") -> str:
-    """Research the PDF file and return its content for analysis."""
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    
-    # Download the PDF with headers
-    response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        raise ValueError(f"Failed to download file: status code {response.status_code}")
-    
-    with open(local_path, 'wb') as file:
-        file.write(response.content)
-    
-    # Read the PDF file
-    text = ""
-    with open(local_path, 'rb') as pdf_file:
-        reader = PdfFileReader(pdf_file)
-        for page_num in range(reader.numPages):
-            page = reader.getPage(page_num)
-            text += page.extract_text()
-    
-    return text
+    return markdown
+
 
 Researcher = Agent(
     role='Researcher',
@@ -345,7 +431,7 @@ Researcher = Agent(
         3. **For a Company**: Create thorough profiles for top executives, pinpoint primary investors, record significant financial milestones, and evaluate the company's financial health using metrics like valuation, revenue, and profitability. Link to resources such as [Yahoo Finance](https://finance.yahoo.com/) or the company website for financial reports and analyses.
 
         ''',
-    tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # This can be optionally specified; defaults to an empty list
+    tools=[tavily_tool,scrape_webpages,pdf_reader,nonprofit_financials],  # This can be optionally specified; defaults to an empty list
     llm=llm,
     verbose=True
     )
@@ -367,7 +453,7 @@ additional context.
 
 3. **For a Company**: Ensure to include information about top executives, primary investors, valuation, revenue, and profitability if absent. Include sources and hyperlinks for each piece of added information
     ''',
-    tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
+    tools=[tavily_tool,scrape_webpages,pdf_reader,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
     llm=llm,
     verbose=True
 )
@@ -381,7 +467,7 @@ Factcheck_agent = Agent(
     goal='''
     Make sure that the information is not compiled from two people with the same name.
     ''',
-    tools=[tavily_tool,scrape_webpages,load_pdf,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
+    tools=[tavily_tool,scrape_webpages,pdf_reader,nonprofit_financials],  # Optionally specify tools; defaults to an empty list
     llm=llm
     )
 
