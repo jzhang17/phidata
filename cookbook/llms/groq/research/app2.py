@@ -58,7 +58,7 @@ from PIL import Image
 from anthropic import Anthropic
 import time
 
-
+os.environ['PATH'] += os.pathsep + "/usr/bin"
 anthropic_api_key = os.getenv('ANTHROPIC_API_KEY') # replace with your API key from anthropic website or use environment variable if available in the codebase
 
 
