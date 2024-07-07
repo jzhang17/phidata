@@ -205,12 +205,16 @@ def scrape_webpages(urls: List[str]) -> str:
     """Use requests to scrape the provided web pages for detailed information."""
     combined_content = ""
     
-    # Function to resize images in markdown to 300px wide using HTML
+    # Function to resize images in markdown to max 300px wide using HTML
     def resize_images(content: str) -> str:
         # Regex to find markdown image syntax
         pattern = r'!\[([^\]]*)\]\(([^\)]+)\)'
-        # Replacement with HTML image tag with width set to 300px
-        replacement = r'<img src="\2" alt="\1" style="width:300px;" />'
+        
+        def replacement(match):
+            alt_text = match.group(1)
+            image_url = match.group(2)
+            return f'<img src="{image_url}" alt="{alt_text}" style="max-width:300px; width:100%;" />'
+        
         return re.sub(pattern, replacement, content)
     
     for url in urls:
@@ -222,7 +226,8 @@ def scrape_webpages(urls: List[str]) -> str:
         if len(combined_content) > 100000:
             break
             
-    return combined_content[:100000]  # Limit the output to the first 50,000 characters    
+    return combined_content[:100000]  # Limit the output to the first 100,000 characters
+   
 
 @tool
 def pdf_reader(pdf_url):
