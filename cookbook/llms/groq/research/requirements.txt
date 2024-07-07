@@ -195,3 +195,4 @@ pysqlite3-binary
 langchain_anthropic
 PyPDF2
 pdf2image
+pymupdf

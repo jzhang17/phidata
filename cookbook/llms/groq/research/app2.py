@@ -57,6 +57,7 @@ from io import BytesIO
 from PIL import Image
 from anthropic import Anthropic
 import time
+import fitz
 
 os.environ['PATH'] += os.pathsep
 anthropic_api_key = os.getenv('ANTHROPIC_API_KEY') # replace with your API key from anthropic website or use environment variable if available in the codebase
@@ -250,19 +251,20 @@ def pdf_reader(pdf_url):
         # Add a sleep after getting the PDF
         time.sleep(2)
         
-        # Convert PDF to images
-        images = convert_from_bytes(pdf_content, dpi=200,poppler_path=os.environ['PATH'])
+        # Open the PDF using PyMuPDF
+        pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
         
-        # Convert images to text
+        # Convert PDF pages to images
         client = Anthropic(api_key=anthropic_api_key)
         
         content_placeholder.markdown(full_text)
         
-        for i, image in enumerate(images):
+        for page_num in range(len(pdf_document)):
             try:
-                buffered = BytesIO()
-                image.save(buffered, format="PNG")
-                image_base64 = base64.b64encode(buffered.getvalue()).decode()
+                page = pdf_document[page_num]
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # Increase resolution
+                img_bytes = pix.tobytes("png")
+                image_base64 = base64.b64encode(img_bytes).decode()
                 
                 stream = client.messages.create(
                     model="claude-3-haiku-20240307",
@@ -290,7 +292,7 @@ def pdf_reader(pdf_url):
                     ]
                 )
                 
-                full_text += f"## Page {i+1}\n\n"
+                full_text += f"## Page {page_num+1}\n\n"
                 content_placeholder.markdown(full_text)
                 
                 for chunk in stream:
@@ -302,7 +304,7 @@ def pdf_reader(pdf_url):
                         elif hasattr(chunk.delta, 'content'):
                             for content in chunk.delta.content:
                                 if hasattr(content, 'text'):
-                                    content_text = content.text.replace("$", "\$").replace("```", "")
+                                    content_text = content.text.replace("$", "\$").replace("```", "\n")
                                     full_text += content_text
                                     content_placeholder.markdown(full_text)
                 
@@ -310,21 +312,17 @@ def pdf_reader(pdf_url):
                 content_placeholder.markdown(full_text)
             except Exception as e:
                 error_occurred = True
-                full_text += f"Error processing page {i+1}: {str(e)}\n\n"
+                full_text += f"Error processing page {page_num+1}: {str(e)}\n\n"
                 content_placeholder.markdown(full_text)
+
+        pdf_document.close()
 
     except Exception as e:
         error_occurred = True
         full_text += f"An error occurred while processing the PDF: {str(e)}\n\n"
         content_placeholder.markdown(full_text)
 
-    finally:
-        if error_occurred:
-            full_text += "\nNote: Some errors occurred during processing. The content may be incomplete.\n"
-        else:
-            full_text += "\nPDF processing completed successfully.\n"
-        content_placeholder.markdown(full_text)
-        return full_text
+    return full_text
 
 
 
