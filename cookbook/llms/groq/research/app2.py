@@ -246,6 +246,7 @@ def pdf_reader(pdf_url):
         }
         if custom_headers:
             headers.update(custom_headers)
+        time.sleep(2)
 
         # Download PDF with redirect handling
         session = requests.Session()
@@ -253,8 +254,7 @@ def pdf_reader(pdf_url):
         response.raise_for_status()
         pdf_content = response.content
         
-        # Add a sleep after getting the PDF
-        time.sleep(2)
+
         
         # Open the PDF using PyMuPDF
         pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
