@@ -62,6 +62,7 @@ import fitz
 os.environ['PATH'] += os.pathsep
 anthropic_api_key = os.getenv('ANTHROPIC_API_KEY') # replace with your API key from anthropic website or use environment variable if available in the codebase
 
+st.warning('Upstream API data provider is experiencing issues right now. Search results are not accurate. This message will be removed when the issue is fixed. - JZ', icon="⚠️")
 
 st.set_page_config(
     page_title="JZ NewBizBot XL",
