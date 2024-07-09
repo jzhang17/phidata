@@ -69,9 +69,6 @@ st.set_page_config(
     )
 
 st.title("JZ NewBizBot XL")
-
-st.warning('Upstream API data provider is experiencing issues right now. Search results are not accurate. This message will be removed when the issue is fixed. - JZ', icon="⚠️")
-
 # Add a dropdown to select the model
 model_option = st.selectbox(
     'Choose a model:',
