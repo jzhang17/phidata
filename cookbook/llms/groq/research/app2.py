@@ -38,7 +38,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from langchain_openai import ChatOpenAI
 import re
 import sys
-from assistant import get_research_assistant, get_planning_assistant, get_dp_assistant, get_followup_assistant, get_consolidate_assistant
+from assistant import get_dp_assistant
 import json  # Make sure to import the json module
 from phi.tools.tavily import TavilyTools
 from typing import Optional, Literal, Dict, Any
