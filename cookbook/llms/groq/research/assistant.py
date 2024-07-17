@@ -307,6 +307,9 @@ def get_dp_assistant(
 
             Use the title 
             #### Search on Digital Prospecting:
+
+            After this, apply the same logic and add a new section. The new link is 'https://jznewbizbot2.streamlit.app/?input=[Name]'
+            #### Perform another search:
             """
         ],
         add_to_system_prompt=dedent(
