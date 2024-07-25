@@ -72,16 +72,9 @@ st.set_page_config(
 
 st.title("JZ NewBizBot XL")
 # Add a dropdown to select the model
-model_option = st.selectbox(
-    'Choose a model:',
-    ('Claude-3.5-Sonnet','GPT-4o')
-)
+model_option = 'Claude-3.5-Sonnet'
 
-# Initialize the LLM based on the selected model
-if model_option == 'GPT-4o':
-    llm = ChatOpenAI(model="gpt-4o", temperature=0)
-elif model_option == 'Claude-3.5-Sonnet':
-    llm = ChatAnthropic(model="claude-3-5-sonnet-20240620", temperature=0)
+llm = ChatAnthropic(model="claude-3-5-sonnet-20240620", temperature=0)
 
 class TavilyTools(Toolkit):
     def __init__(
