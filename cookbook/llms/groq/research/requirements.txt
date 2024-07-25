@@ -196,3 +196,4 @@ langchain_anthropic
 PyPDF2
 pdf2image
 pymupdf
+tiktoken

@@ -58,13 +58,15 @@ from PIL import Image
 from anthropic import Anthropic
 import time
 import fitz
+import tiktoken
+import random
 
 os.environ['PATH'] += os.pathsep
 anthropic_api_key = os.getenv('ANTHROPIC_API_KEY') # replace with your API key from anthropic website or use environment variable if available in the codebase
 
 
 st.set_page_config(
-    page_title="JZ NewBizBot XL",
+    page_title="JZ NewBizBot",
     page_icon="💰"
     )
 
@@ -189,7 +191,27 @@ class TavilyTools(Toolkit):
             query=query, search_depth=self.search_depth, max_tokens=self.max_tokens, include_answer=self.include_answer
         )
 
-
+def count_tokens_and_estimate_cost(input_text, output_text, model="GPT-4o"):
+    if model == "GPT-4o":
+        encoding = tiktoken.encoding_for_model("gpt-4")
+    else:
+        # For Claude or other models, use a generic tokenizer
+        encoding = tiktoken.get_encoding("cl100k_base")
+    
+    input_token_count = len(encoding.encode(input_text))
+    output_token_count = len(encoding.encode(output_text))
+    
+    # Cost estimates (update these based on current pricing)
+    cost_per_1k_tokens = {
+        "GPT-4o": {"input": 0.005, "output": 0.015},
+        "claude-3-5-sonnet-20240620": {"input": 0.003, "output": 0.015}
+    }
+    
+    model_costs = cost_per_1k_tokens.get(model, cost_per_1k_tokens["GPT-4o"])
+    input_cost = (input_token_count / 1000) * model_costs["input"]
+    output_cost = (output_token_count / 1000) * model_costs["output"]
+    
+    return input_token_count, output_token_count, input_cost, output_cost
 
 @tool
 def tavily_tool(query):
@@ -478,27 +500,57 @@ class StreamToExpander:
     def __init__(self):
         self.expanders = []
         self.buffer = []
-        self.colors = ['red', 'green', 'blue', 'orange']  # Define a list of colors
-        self.color_index = 0  # Initialize color index
+        self.colors = ['red', 'green', 'blue', 'orange']
+        self.color_index = 0
         self.current_expander = None
         self.finished_chain_detected = False
+        self.input_text = ""
+        self.output_text = ""
+        self.current_type = "input"
+        self.thought_count = 0
+        self.last_thought = ""
+        self.last_action = ""
+
+    def random_emoji(self):
+        emojis = ["💡", "🔍", "🧠", "💭", "🤔", "💬", "🗯️", "🚀", "✨"]
+        return random.choice(emojis)
+
+    def process_content(self, content):
+        if "Thought:" in content:
+            thought_match = re.search(r'Thought: (.*?)(?=\n|$)', content, re.DOTALL)
+            if thought_match and thought_match.group(1) != self.last_thought:
+                self.thought_count += 1
+                self.last_thought = thought_match.group(1)
+                st.toast(f"Thought #{self.thought_count}: {self.last_thought[:100]}...", icon=f"{self.random_emoji()}")
+
+        if "Action:" in content:
+            action_match = re.search(r'Action: (.*?)\nAction Input: (.*?)(?=\n|$)', content, re.DOTALL)
+            if action_match:
+                action, action_input = action_match.groups()
+                if f"{action}:{action_input}" != self.last_action:
+                    self.last_action = f"{action}:{action_input}"
+                    st.toast(f"Action: {action}\nInput: {action_input[:100]}...", icon="🛠️")
 
     def write(self, data):
-        # Filter out ANSI escape codes using a regular expression
         cleaned_data = re.sub(r'\x1B\[[0-9;]*[mK]', '', data)
 
-        # Check if "Finished chain." is in the cleaned_data
+        if "Human:" in cleaned_data:
+            self.current_type = "input"
+        elif "AI:" in cleaned_data or "Thought:" in cleaned_data:
+            self.current_type = "output"
+
+        if self.current_type == "input":
+            self.input_text += cleaned_data
+        else:
+            self.output_text += cleaned_data
+
         if "Finished chain." in cleaned_data:
-            # Truncate the cleaned_data at "Finished chain."
             cleaned_data = cleaned_data.split("Finished chain.")[0]
-            # Set the flag to indicate finished chain has been detected
             self.finished_chain_detected = True
 
-        # If finished chain has been detected, ignore any further data
         if self.finished_chain_detected:
             return
 
-        # Check if the data contains 'task' information
         task_match_object = re.search(r'\"task\"\s*:\s*\"(.*?)\"', cleaned_data, re.IGNORECASE)
         task_match_input = re.search(r'task\s*:\s*([^\n]*)', cleaned_data, re.IGNORECASE)
         task_value = None
@@ -510,33 +562,21 @@ class StreamToExpander:
         if task_value:
             st.toast(":robot_face: " + task_value)
 
-        # Check if the text contains the specified phrase and apply color
         if "Entering new CrewAgentExecutor chain" in cleaned_data:
-            # Apply different color and switch color index
-            self.color_index = (self.color_index + 1) % len(self.colors)  # Increment color index and wrap around if necessary
+            self.color_index = (self.color_index + 1) % len(self.colors)
             cleaned_data = cleaned_data.replace("Entering new CrewAgentExecutor chain", f"<span style='color:{self.colors[self.color_index]}'>Entering new CrewAgentExecutor chain</span>")
 
         if "Researcher" in cleaned_data:
-            # Apply different color 
             cleaned_data = cleaned_data.replace("Researcher", f"<span style='color:{self.colors[self.color_index]}'>Researcher</span>")
         
         if "Fact-Checking Agent" in cleaned_data:
-            # Apply different color 
             cleaned_data = cleaned_data.replace("Fact-Checking Agent", f"<span style='color:{self.colors[self.color_index]}'>Fact-Checking Agent</span>")
 
-        # Check if the text contains a new thought or debug information
-        if "[DEBUG]:" in cleaned_data:
+        if "[DEBUG]:" in cleaned_data or "Thought:" in cleaned_data:
             self.current_expander = st.expander(f"Executing Intermediate Step", expanded=True)
             self.expanders.append(self.current_expander)
             self.buffer = []
 
-        # Check if the text contains a new thought
-        if "Thought:" in cleaned_data:
-            self.current_expander = st.expander(f"Executing Intermediate Step", expanded=True)
-            self.expanders.append(self.current_expander)
-            self.buffer = []
-
-        # Check if the text contains task output
         if "Task output:" in cleaned_data:
             cleaned_data = cleaned_data.replace("Task output:", "Task output:\n\n")
 
@@ -544,19 +584,18 @@ class StreamToExpander:
             self.current_expander = st.expander(f"Starting Search", expanded=True)
             self.expanders.append(self.current_expander)
 
-        else:
-            self.buffer.append(cleaned_data)
+        self.buffer.append(cleaned_data)
 
         if "\n" in data:
-            self.current_expander.markdown(''.join(self.buffer), unsafe_allow_html=True)
+            content = ''.join(self.buffer)
+            self.current_expander.markdown(content, unsafe_allow_html=True)
+            self.process_content(content)
             self.buffer = []
 
     def flush(self):
-        pass  # No operation for flushing needed
+        pass
 
 
-# Checkbox for comprehensive mode
-comprehensive_mode = st.checkbox("Enable Comprehensive Mode (experimental, takes longer, not all intermediate steps will show)")
 
 query_params = st.query_params
 input_value = query_params.get('input', 'Bill Gates')
@@ -698,15 +737,10 @@ if with_clear_container(submit_clicked):
             '''
         )
 
-    # Set process type and agents based on comprehensive mode
-    if comprehensive_mode:
-        process = Process.hierarchical
-        agents = [Researcher, Followup_Agent]
-        tasks = [task1, task2]
-    else:
-        process = Process.sequential
-        agents = [Researcher]
-        tasks = [task1]
+
+    process = Process.sequential
+    agents = [Researcher]
+    tasks = [task1]
 
     # Crew definition
     project_crew = Crew(
@@ -721,6 +755,16 @@ if with_clear_container(submit_clicked):
     sys.stdout = stream_to_expander
     with st.spinner("Generating Results"):
         crew_result = project_crew.kickoff()
+
+    input_tokens, output_tokens, input_cost, output_cost = count_tokens_and_estimate_cost(
+        stream_to_expander.input_text, 
+        stream_to_expander.output_text, 
+        model_option
+    )
+
+    total_cost = input_cost + output_cost
+    st.toast(f"Estimated Cost: ${total_cost:.4f}", icon="💸")
+
 
     dp_assistant = get_dp_assistant(model="llama3-70b-8192")
     spacing = "\n\n---\n\n"
