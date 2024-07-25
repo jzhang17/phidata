@@ -70,7 +70,7 @@ st.set_page_config(
     page_icon="💰"
     )
 
-st.title("JZ NewBizBot XL")
+st.title("JZ NewBizBot")
 # Add a dropdown to select the model
 model_option = 'Claude-3.5-Sonnet'
 
