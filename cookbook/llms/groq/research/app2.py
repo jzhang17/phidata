@@ -53,13 +53,16 @@ from langchain_anthropic import ChatAnthropic
 from PyPDF2 import PdfFileReader
 import base64
 from pdf2image import convert_from_bytes
-from io import BytesIO
 from PIL import Image
 from anthropic import Anthropic
 import time
 import fitz
 import tiktoken
 import random
+from langchain.prompts import PromptTemplate
+from langchain.chains import LLMChain
+import io
+
 
 os.environ['PATH'] += os.pathsep
 anthropic_api_key = os.getenv('ANTHROPIC_API_KEY') # replace with your API key from anthropic website or use environment variable if available in the codebase
@@ -167,6 +170,7 @@ class TavilyTools(Toolkit):
                 _markdown += f"Links for load_pdf tool: {pdf_links}\n\n"
             if webpage_links:
                 _markdown += f"Links for scrape_webpages tool: {webpage_links}\n"
+            st.toast(f"Web search complete for query: {query}.", icon='🔍')
             return _markdown
 
     def web_search_with_tavily(self, query: str) -> str:
@@ -239,7 +243,7 @@ def scrape_webpages(urls: List[str]) -> str:
         combined_content += resized_content
         if len(combined_content) > 100000:
             break
-            
+    st.toast(f"Finished reading {len(urls)} web pages", icon='📝')
     return combined_content[:100000]  # Limit the output to the first 100,000 characters
    
 
@@ -251,7 +255,6 @@ def pdf_reader(pdf_url):
     custom_headers = None
     content_placeholder = st.empty()
     full_text = "# PDF Content\n\n"
-    error_occurred = False
 
     try:
         # Set up headers
@@ -758,12 +761,91 @@ if with_clear_container(submit_clicked):
     total_cost = input_cost + output_cost
     st.toast(f"Estimated Cost: ${total_cost:.4f}", icon="💸")
 
+    def generate_mermaid_graph(text):
+        prompt_template = PromptTemplate(
+            input_variables=["text"],
+            template="""
+            Based on the following text, create a Mermaid graph definition that visualizes the relationships between all entities:
+
+            {text}
+
+            The Mermaid graph should use the graph LR (left-right) format.
+            Each entity should be represented with a unique ID and a label.
+            Relationships should be represented as edges between nodes, with labels describing the relationship.
+            Include subgraphs for grouping related entities (e.g., "Foundation Leadership", "Focus Areas").
+            Use style definitions to color-code different types of entities.
+            Include more detailed information about each entity and relationship.
+            Capture all entities mentioned in the text, without limiting to a specific number of nodes.
+            Please provide only the Mermaid graph definition, without any explanations or additional text.
+
+            Example format:
+            graph LR
+                A[Entity A]
+                B[Entity B]
+                C[Entity C]
+                A -->|relates to| B
+                B -->|influences| C
+                A -->|collaborates with| C
+                subgraph Group 1
+                    D[Entity D]
+                    E[Entity E]
+                end
+                A -->|connects to| D
+                style A fill:#f9d5e5,stroke:#333,stroke-width:2px
+                style B fill:#e06377,stroke:#333,stroke-width:2px
+            """
+        )
+        chain = LLMChain(llm=llm, prompt=prompt_template)
+        result = chain.run(text=text)
+        return result.strip()
+    
+    def mermaid_to_image(mermaid_code, image_type='png'):
+        """
+        Convert Mermaid code to an image using the Mermaid Live Editor API.
+        :param mermaid_code: A string containing the Mermaid markdown code.
+        :param image_type: The desired output image type (default is 'png').
+        :return: PIL Image object or None if failed.
+        """
+        try:
+            # Mermaid Live Editor API endpoint
+            url = "https://mermaid.ink/img/"
+
+            # Encode the Mermaid code
+            encoded_code = base64.urlsafe_b64encode(mermaid_code.encode()).decode()
+
+            # Construct the full URL
+            full_url = f"{url}{encoded_code}"
+
+            # Make a GET request to the API
+            response = requests.get(full_url)
+            response.raise_for_status()  # Raises an HTTPError for bad responses
+
+            # Open the image using PIL
+            img = Image.open(io.BytesIO(response.content))
+
+            print("Image generated successfully")
+            return img
+        except requests.RequestException as e:
+            print(f"Error generating image: {e}")
+            return None
+
+    spacing = "\n\n---\n\n"
+    st.header("Results:")
+    st.markdown(crew_result.replace("$", "\$") + spacing)
+
+    with st.spinner("Generating diagram..."):
+        mermaid_graph = generate_mermaid_graph(crew_result)
+        # Display the Mermaid graph
+        if mermaid_graph:
+            st.subheader("Relationship Diagram")
+            image_path = mermaid_to_image(mermaid_graph)
+            if image_path:
+                st.image(image_path, caption="Generated Relationship Diagram")
+            else:
+                st.error("Failed to generate the diagram image.")
 
     dp_assistant = get_dp_assistant(model="llama3-70b-8192")
-    spacing = "\n\n---\n\n"
     dp_report = ""
     for delta in dp_assistant.run(crew_result):
-        dp_report += delta  # type: ignore)
-
-    st.header("Results:")
-    st.markdown(crew_result.replace("$","\$") + spacing + dp_report)
+        dp_report += delta  # type: ignore
+    st.markdown(spacing + dp_report)
