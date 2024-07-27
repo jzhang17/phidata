@@ -609,56 +609,61 @@ if with_clear_container(submit_clicked):
         agent=Researcher,
         expected_output='''
         #### Individual Prospect Profile: John Doe
-            - **Name:** John Doe
-            - **Summary:** John Doe is a seasoned tech entrepreneur with a demonstrated history of success in the tech industry and a strong commitment to philanthropy. His current focus is on innovative solutions that address key societal challenges.
-            - **Age:** 45
-            - **Location:** New York
-            - **Net Worth:** Approximately `$2 million, verified by [WealthX](https://www.wealthx.com/)
-            - **Occupation:** Tech Entrepreneur with a focus on innovative software solutions. 
-            - **Family Dynamics:** Married with two children, emphasizing a balanced work-life integration
-            - **Board Affiliations:** Active in philanthropic ventures; serves on the boards of:
-                - XYZ Nonprofit: Promoting educational initiatives. More details [here](https://www.xyznonprofit.org)
-                - ABC Foundation: Supporting environmental sustainability. Learn more [here](https://www.abcfoundation.org/about-us)
-            - **Interests:** Known for interests in renewable energy and education technology
-            - **Recent News:** John Doe was recently featured in a TechCrunch article for his significant contribution to developing a new educational app that aims to improve accessibility for students with disabilities. Read the full article [here](https://techcrunch.com).
-            - **Additional Information:** 
-                - Advocates for technology-driven solutions to social issues
-                - Actively participates in conferences and workshops related to tech innovation and social responsibility.
+        - **Name:** John Doe
+        - **Summary:** John Doe is a seasoned tech entrepreneur with a demonstrated history of success in the tech industry and a strong commitment to philanthropy. His current focus is on innovative solutions that address key societal challenges.
+        - **Age:** 45
+        - **Location:** New York
+        - **Net Worth:** Approximately $2 million, verified by [WealthX](https://www.wealthx.com/)
+        - **Occupation:** Tech Entrepreneur with a focus on innovative software solutions. 
+        - **Family Dynamics:** Married with two children, emphasizing a balanced work-life integration
+        - **Board Affiliations:** Active in philanthropic ventures; serves on the boards of:
+            - XYZ Nonprofit: Promoting educational initiatives. More details [here](https://www.xyznonprofit.org)
+            - ABC Foundation: Supporting environmental sustainability. Learn more [here](https://www.abcfoundation.org/about-us)
+        - **Interests:** Known for interests in renewable energy and education technology
+        - **Recent News:** John Doe was recently featured in a TechCrunch article for his significant contribution to developing a new educational app that aims to improve accessibility for students with disabilities. Read the full article [here](https://techcrunch.com).
+        - **Additional Information:** 
+            - <img src="https://images.profiledatabase.com/tech-entrepreneurs/john-doe-portrait-2023.jpg" alt="John Doe" style="max-width:200px; width:100%;" />
+            - Advocates for technology-driven solutions to social issues
+            - Actively participates in conferences and workshops related to tech innovation and social responsibility.
 
         #### Nonprofit Organization Profile: Help the World Grow
-            - **Organization Name:** Help the World Grow
-            - **Location:** Los Angeles, CA
-            - **Summary:** Help the World Grow is a robust nonprofit organization with a global reach, actively working to enhance educational outcomes and reduce inequalities through strategic partnerships and impactful initiatives.
-            - **Asset Size:** Estimated at `$5 million
-            - **Key Members:** 
-                - Jane Smith, notable for her expertise in financial strategy; profile available on the organization’s [team page](https://www.helptheworldgrow.org/team)
-                - John Doe, notable for her expertise in financial strategy; profile available on the organization’s [team page](https://www.helptheworldgrow.org/team)
-            - **Major Donors:**
-                - XYZ Corp: Engaged in various corporate philanthropy efforts
-                - ABC Foundation: Long-term supporter, focusing on impactful projects
-            - **Financials:** Recent Form 990 indicates a surplus of `$200,000 in the last fiscal year. The report is accessible at [CauseIQ](https://www.causeiq.com/)
-            - **Impact Highlights:** Recent projects have notably increased literacy rates in underserved regions
-            - **Recent News:** The organization has launched a new initiative in partnership with local governments in South America to enhance educational infrastructure, reported last week by CNN. Full story [here](https://www.cnn.com).
-            - **Additional Information:** 
-                - Collaborates with educational experts and local communities to tailor programs
-                - Addresses specific educational challenges in various regions
+        - **Organization Name:** Help the World Grow
+        - **Location:** Los Angeles, CA
+        - **Summary:** Help the World Grow is a robust nonprofit organization with a global reach, actively working to enhance educational outcomes and reduce inequalities through strategic partnerships and impactful initiatives.
+        - **Asset Size:** Estimated at $5 million
+        - **Key Members:** 
+            - Jane Smith, notable for her expertise in financial strategy; profile available on the organization's [team page](https://www.helptheworldgrow.org/team)
+            - John Doe, notable for his expertise in financial strategy; profile available on the organization's [team page](https://www.helptheworldgrow.org/team)
+        - **Major Donors:**
+            - XYZ Corp: Engaged in various corporate philanthropy efforts
+            - ABC Foundation: Long-term supporter, focusing on impactful projects
+        - **Financials:** Recent Form 990 indicates a surplus of $200,000 in the last fiscal year. The report is accessible at [CauseIQ](https://www.causeiq.com/)
+        - **Impact Highlights:** Recent projects have notably increased literacy rates in underserved regions
+        - **Recent News:** The organization has launched a new initiative in partnership with local governments in South America to enhance educational infrastructure, reported last week by CNN. Full story [here](https://www.cnn.com).
+        - **Additional Information:** 
+            - <img src="https://www.helptheworldgrow.org/wp-content/uploads/2023/logo-full-color.png" alt="Help the World Grow Logo" style="max-width:200px; width:100%;" />
+            - Collaborates with educational experts and local communities to tailor programs
+            - Addresses specific educational challenges in various regions
 
         #### Company Profile: Innovative Tech Solutions
-            - **Company Name:** Innovative Tech Solutions
-            - **Location:** San Diego
-            - **Summary:** Innovative Tech Solutions is a leading tech company that stands at the forefront of AI and machine learning technology, with strong financial performance and strategic plans for continued growth and innovation in the industry.
-            - **Industry:** Technology, specializing in AI and machine learning applications
-            - **CEO:** Robert Johnson, a visionary leader with over 20 years in the tech industry. Full bio available on [Bloomberg Executives](https://www.bloomberg.com/profile/person/xxxxx)
-            - **Founder:** Emily White, an entrepreneur recognized for her innovative approaches to technology development
-            - **Major Investors:** Includes prominent venture capital firms such as [VentureXYZ](https://www.venturexyz.com) and [CapitalABC](https://www.capitalabc.com)
-            - **Financial Performance Metrics:**
-                - Current Valuation: `$50 million
-                - Annual Revenue: `$10 million, demonstrating robust growth in the tech sector
-                - Annual Profit: `$1 million, highlighting effective cost management and business operations
-            - **Recent News:** Innovative Tech Solutions has been awarded a patent for a groundbreaking AI algorithm that optimizes energy usage in large-scale manufacturing, as reported last month by Forbes. More details [here](https://www.forbes.com).
-            - **Additional Information:** 
-                - Committed to sustainability, investing in green technologies
-                - Aiming to reduce its carbon footprint over the next decade
+        - **Company Name:** Innovative Tech Solutions
+        - **Location:** San Diego
+        - **Summary:** Innovative Tech Solutions is a leading tech company that stands at the forefront of AI and machine learning technology, with strong financial performance and strategic plans for continued growth and innovation in the industry.
+        - **Industry:** Technology, specializing in AI and machine learning applications
+        - **CEO:** Robert Johnson, a visionary leader with over 20 years in the tech industry. Full bio available on [Bloomberg Executives](https://www.bloomberg.com/profile/person/xxxxx)
+        - <img src="https://innovativetechsolutions.com/about/leadership/robert-johnson-ceo.jpg" alt="Robert Johnson" style="max-width:200px; width:100%;" />
+        - **Founder:** Emily White, an entrepreneur recognized for her innovative approaches to technology development
+        - <img src="https://innovativetechsolutions.com/about/leadership/emily-white-founder.jpg" alt="Emily White" style="max-width:200px; width:100%;" />
+        - **Major Investors:** Includes prominent venture capital firms such as [VentureXYZ](https://www.venturexyz.com) and [CapitalABC](https://www.capitalabc.com)
+        - **Financial Performance Metrics:**
+            - Current Valuation: $50 million
+            - Annual Revenue: $10 million, demonstrating robust growth in the tech sector
+            - Annual Profit: $1 million, highlighting effective cost management and business operations
+        - **Recent News:** Innovative Tech Solutions has been awarded a patent for a groundbreaking AI algorithm that optimizes energy usage in large-scale manufacturing, as reported last month by Forbes. More details [here](https://www.forbes.com).
+        - **Additional Information:** 
+            - Committed to sustainability, investing in green technologies
+            - <img src="https://innovativetechsolutions.com/branding/logo-2023-color.png" alt="Innovative Tech Solutions Logo" style="max-width:200px; width:100%;" />
+            - Aiming to reduce its carbon footprint over the next decade
                 '''
         )
 
@@ -848,7 +853,7 @@ if with_clear_container(submit_clicked):
 
     spacing = "\n\n---\n\n"
     st.header("Results:")
-    st.markdown(crew_result.replace("$", "\$") + spacing)
+    st.markdown(crew_result.replace("$", "\$") + spacing, unsafe_allow_html=True)
 
     with st.expander("Relationship Diagram", expanded=True):
         with st.spinner("Generating diagram..."):
