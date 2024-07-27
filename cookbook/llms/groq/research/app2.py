@@ -1,10 +1,6 @@
 import streamlit as st
 from streamlit.components.v1 import html
 import os
-import boto3
-from botocore.client import Config
-from pathlib import Path
-from langchain import hub
 from langchain.agents import AgentExecutor
 from langchain_community.callbacks import StreamlitCallbackHandler
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper, SQLDatabase
@@ -38,7 +34,6 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from langchain_openai import ChatOpenAI
 import re
 import sys
-from assistant import get_dp_assistant
 import json  # Make sure to import the json module
 from phi.tools.tavily import TavilyTools
 from typing import Optional, Literal, Dict, Any
@@ -62,6 +57,7 @@ import random
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 import io
+from langchain_groq import ChatGroq
 
 
 os.environ['PATH'] += os.pathsep
@@ -766,33 +762,54 @@ if with_clear_container(submit_clicked):
             input_variables=["text"],
             template="""
             Based on the following text, create a Mermaid graph definition that visualizes the relationships between all entities:
-
             {text}
-
             The Mermaid graph should use the graph LR (left-right) format.
             Each entity should be represented with a unique ID and a label.
             Relationships should be represented as edges between nodes, with labels describing the relationship.
-            Include subgraphs for grouping related entities (e.g., "Foundation Leadership", "Focus Areas").
-            Use style definitions to color-code different types of entities.
+            Include three main subgraphs: Personal, Professional, and Philanthropy.
+            Use nested subgraphs within the main subgraphs to further organize related entities.
+            Use style definitions to color-code different types of entities and subgraphs.
             Include more detailed information about each entity and relationship.
             Capture all entities mentioned in the text, without limiting to a specific number of nodes.
             Please provide only the Mermaid graph definition, without any explanations or additional text.
-
             Example format:
             graph LR
-                A[Entity A]
-                B[Entity B]
-                C[Entity C]
-                A -->|relates to| B
-                B -->|influences| C
-                A -->|collaborates with| C
-                subgraph Group 1
-                    D[Entity D]
-                    E[Entity E]
+                MainEntity[Main Entity]
+
+                subgraph Personal
+                    style Personal fill:#FFFACD
+                    subgraph Family
+                        A[Entity A]
+                        B[Entity B]
+                    end
+                    C[Entity C]
+                    style C fill:#FFB6C1
                 end
-                A -->|connects to| D
-                style A fill:#f9d5e5,stroke:#333,stroke-width:2px
-                style B fill:#e06377,stroke:#333,stroke-width:2px
+
+                subgraph Professional
+                    style Professional fill:#E6F3FF
+                    subgraph Companies
+                        D[Entity D]
+                        E[Entity E]
+                    end
+                    F[Entity F]
+                    style F fill:#98FB98
+                end
+
+                subgraph Philanthropy
+                    style Philanthropy fill:#98FB98
+                    G[Entity G]
+                    style G fill:#FFB6C1
+                    subgraph Areas
+                        H[Area H]
+                        I[Area I]
+                    end
+                end
+
+                MainEntity --> |relation1| A
+                MainEntity --> |relation2| D
+                MainEntity --> |relation3| G
+                C --> |relation4| G
             """
         )
         chain = LLMChain(llm=llm, prompt=prompt_template)
@@ -833,19 +850,92 @@ if with_clear_container(submit_clicked):
     st.header("Results:")
     st.markdown(crew_result.replace("$", "\$") + spacing)
 
-    with st.spinner("Generating diagram..."):
-        mermaid_graph = generate_mermaid_graph(crew_result)
-        # Display the Mermaid graph
+    with st.expander("Relationship Diagram", expanded=True):
+        with st.spinner("Generating diagram..."):
+            mermaid_graph = generate_mermaid_graph(crew_result)
         if mermaid_graph:
             st.subheader("Relationship Diagram")
             image_path = mermaid_to_image(mermaid_graph)
             if image_path:
-                st.image(image_path, caption="Generated Relationship Diagram")
+                st.image(image_path)
             else:
-                st.error("Failed to generate the diagram image.")
+                st.error("Failed to generate the Relationship Diagram.")
+        else:
+            st.error("Failed to generate the Relationship Diagram.")
 
-    dp_assistant = get_dp_assistant(model="llama3-70b-8192")
+    def get_dp_assistant(
+        model: str = "llama-3.1-70b-versatile",
+        debug_mode: bool = False,
+    ) -> LLMChain:
+        """Get a Groq DP Assistant."""
+        
+        llm = ChatGroq(model=model)
+        
+        system_message = """
+        As an experienced professional in wealth management, your objective is to meticulously analyze a provided dossier. Your focus should be on identifying all relevant individuals and organizations mentioned within the text. These entities may include any person, company, or non-profit organization referenced.
+
+        Instructions:
+        1. Thoroughly read through the available dossier.
+        2. Identify and list all people and organizations mentioned.
+        3. For each identified entity, create two markdown-formatted entries that include:
+
+        #### Search on Digital Prospecting:
+        - **Name** of the person or organization
+        - A **brief description** of their relevance or role
+        - A **customized link** for further exploration or research which you must construct by appending the entity's name to the appropriate base URL provided below:
+        **For a Person:**
+        `http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name=[Name]`
+        **For an Organization:**
+        `http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name=[Name]`
+
+        #### Perform another search on NewBizBot:
+        - **Name** of the person or organization (same as above)
+        - The same **brief description** as above
+        - A **customized link** for NewBizBot search:
+        `https://jznewbizbot2.streamlit.app/?input=[Name]`
+
+        Sample format:
+        #### Search on Digital Prospecting:
+        - [**John Doe**](http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name=John%20Doe) - Noted investor in renewable energy technologies.
+        - [**GreenTech Innovations**](http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name=GreenTech%20Innovations) - A non-profit organization focused on advancing green technology.
+
+        #### Perform another search on NewBizBot:
+        - [**John Doe**](https://jznewbizbot2.streamlit.app/?input=John%20Doe) - Noted investor in renewable energy technologies.
+        - [**GreenTech Innovations**](https://jznewbizbot2.streamlit.app/?input=GreenTech%20Innovations) - A non-profit organization focused on advancing green technology.
+        """
+
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_message),
+            ("human", "{input}"),
+        ])
+
+        chain = LLMChain(
+            llm=llm,
+            prompt=prompt,
+            verbose=debug_mode,
+        )
+
+        return chain
+
+    dp_assistant = get_dp_assistant(model="llama-3.1-70b-versatile")
     dp_report = ""
     for delta in dp_assistant.run(crew_result):
         dp_report += delta  # type: ignore
     st.markdown(spacing + dp_report)
+
+    # JavaScript for auto-scrolling
+    js_code = """
+    <script>
+    function scroll_to_results() {
+        var headers = window.parent.document.getElementsByTagName('h2');
+        for (var i = 0; i < headers.length; i++) {
+            if (headers[i].textContent.includes('Results:')) {
+                headers[i].scrollIntoView({behavior: 'smooth'});
+                break;
+            }
+        }
+    }
+    setTimeout(scroll_to_results, 100);  // Short delay to ensure the element exists
+    </script>
+    """
+    html(js_code)
