@@ -197,3 +197,4 @@ PyPDF2
 pdf2image
 pymupdf
 tiktoken
+langchain_groq
