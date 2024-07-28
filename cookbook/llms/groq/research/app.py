@@ -58,7 +58,9 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 import io
 from langchain_groq import ChatGroq
-
+from langchain.schema.messages import HumanMessage, SystemMessage
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+import streamlit.components.v1 as components
 
 os.environ['PATH'] += os.pathsep
 anthropic_api_key = os.getenv('ANTHROPIC_API_KEY') # replace with your API key from anthropic website or use environment variable if available in the codebase
@@ -246,11 +248,44 @@ def scrape_webpages(urls: List[str]) -> str:
 @tool
 def pdf_reader(pdf_url):
     '''
-    Extracts text from a PDF at the given URL and returns it in Markdown format. Input a valid PDF URL to receive the full text content of the document formatted as Markdown. Always use this tool for form 990 Filings.
+    Extracts text from a PDF at the given URL and returns it in Markdown format. 
+    Input a valid PDF URL to receive the full text content of the document formatted as Markdown. 
+    Always use this tool for form 990 Filings.
     '''
     custom_headers = None
-    content_placeholder = st.empty()
     full_text = "# PDF Content\n\n"
+    
+    # Create an expander to contain the streamed content
+    with st.expander("PDF Content", expanded=True):
+        content_placeholder = st.empty()
+        
+    try:
+        # Try Jina AI first
+        jina_url = "https://r.jina.ai/" + pdf_url
+        jina_response = requests.get(jina_url)
+        jina_response.raise_for_status()
+        jina_content = jina_response.text
+        
+        if jina_content:
+            # Check if Jina content appears to be valid PDF content
+            model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+            system_message = SystemMessage(content="You are an AI assistant tasked with determining if the given text appears to be valid PDF content.")
+            human_message = HumanMessage(content=f"Here are the first 150 words of some text. Determine if this appears to be valid PDF content or if it's irrelevant or error text. Respond with only 'Yes' if it appears to be valid PDF content, or 'No' if it doesn't:\n\n{' '.join(jina_content.split()[:150])}")
+            messages = [system_message, human_message]
+            response = model.invoke(messages)
+            
+            if response.content.strip().lower() == 'yes':
+                full_text += jina_content.replace("$", "\$")
+                with st.expander("PDF Content", expanded=True):
+                    st.markdown(full_text)
+                st.toast(f"Successfully processed PDF with Jina AI", icon='✅')
+                return full_text
+            else:
+                st.toast(f"Jina AI content doesn't appear to be valid PDF content. Falling back to image method.", icon='⚠️')
+        else:
+            st.toast(f"Jina AI returned empty content. Falling back to image method.", icon='⚠️')
+    except Exception as jina_error:
+        st.toast(f"Jina AI processing failed. Falling back to image method: {str(jina_error)}", icon='⚠️')
 
     try:
         # Set up headers
@@ -267,15 +302,14 @@ def pdf_reader(pdf_url):
         response.raise_for_status()
         pdf_content = response.content
         
-
-        
         # Open the PDF using PyMuPDF
         pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
         
         # Convert PDF pages to images
         client = Anthropic(api_key=anthropic_api_key)
         
-        content_placeholder.markdown(full_text)
+        with st.expander("PDF Content", expanded=True):
+            content_placeholder.markdown(full_text)
         
         for page_num in range(len(pdf_document)):
             try:
@@ -286,7 +320,7 @@ def pdf_reader(pdf_url):
                 
                 stream = client.messages.create(
                     model="claude-3-haiku-20240307",
-                    max_tokens=1000,
+                    max_tokens=3000,
                     temperature=0,
                     stream=True,
                     messages=[
@@ -311,37 +345,41 @@ def pdf_reader(pdf_url):
                 )
                 
                 full_text += f"## Page {page_num+1}\n\n"
-                content_placeholder.markdown(full_text)
+                with st.expander("PDF Content", expanded=True):
+                    content_placeholder.markdown(full_text)
                 
                 for chunk in stream:
                     if hasattr(chunk, 'delta'):
                         if hasattr(chunk.delta, 'text'):
                             chunk_text = chunk.delta.text.replace("$", "\$").replace("```", "\n")
                             full_text += chunk_text
-                            content_placeholder.markdown(full_text)
+                            with st.expander("PDF Content", expanded=True):
+                                content_placeholder.markdown(full_text)
                         elif hasattr(chunk.delta, 'content'):
                             for content in chunk.delta.content:
                                 if hasattr(content, 'text'):
                                     content_text = content.text.replace("$", "\$").replace("```", "\n")
                                     full_text += content_text
-                                    content_placeholder.markdown(full_text)
+                                    with st.expander("PDF Content", expanded=True):
+                                        content_placeholder.markdown(full_text)
                 
                 full_text += "\n\n"
-                content_placeholder.markdown(full_text)
+                with st.expander("PDF Content", expanded=True):
+                    content_placeholder.markdown(full_text)
             except Exception as e:
                 error_occurred = True
                 full_text += f"Error processing page {page_num+1}: {str(e)}\n\n"
-                content_placeholder.markdown(full_text)
+                with st.expander("PDF Content", expanded=True):
+                    content_placeholder.markdown(full_text)
 
         pdf_document.close()
 
     except Exception as e:
-        error_occurred = True
         full_text += f"An error occurred while processing the PDF: {str(e)}\n\n"
-        content_placeholder.markdown(full_text)
+        with st.expander("PDF Content", expanded=True):
+            content_placeholder.markdown(full_text)
 
     return full_text
-
 
 
 @tool
@@ -851,10 +889,26 @@ if with_clear_container(submit_clicked):
             print(f"Error generating image: {e}")
             return None
 
-    spacing = "\n\n---\n\n"
+    spacing = "\n---\n"
+    spacing
     st.header("Results:")
-    st.markdown(crew_result.replace("$", "\$") + spacing, unsafe_allow_html=True)
-
+    st.markdown(crew_result.replace("$", "\$"), unsafe_allow_html=True)
+    js_code = """
+    <script>
+    function scroll_to_results() {
+        var headers = window.parent.document.getElementsByTagName('h2');
+        for (var i = 0; i < headers.length; i++) {
+            if (headers[i].textContent.includes('Results:')) {
+                headers[i].scrollIntoView({behavior: 'smooth'});
+                break;
+            }
+        }
+    }
+    setTimeout(scroll_to_results, 100);  // Short delay to ensure the element exists
+    </script>
+    """
+    components.html(js_code, height=0)
+    spacing
     with st.expander("Relationship Diagram", expanded=True):
         with st.spinner("Generating diagram..."):
             mermaid_graph = generate_mermaid_graph(crew_result)
@@ -873,53 +927,46 @@ if with_clear_container(submit_clicked):
         debug_mode: bool = False,
     ) -> LLMChain:
         """Get a Groq DP Assistant."""
-        
         llm = ChatGroq(model=model)
-        
         system_message = """
-        As an experienced professional in wealth management, your objective is to meticulously analyze a provided dossier. Your focus should be on identifying all relevant individuals and organizations mentioned within the text. These entities may include any person, company, or non-profit organization referenced.
+        As an experienced professional in wealth management, your objective is to meticulously analyze the provided dossier. Your focus is on identifying all relevant individuals and organizations mentioned within the text. These entities may include any person, company, or non-profit organization referenced.
 
         Instructions:
-        1. Thoroughly read through the available dossier.
+        1. Thoroughly read through the provided dossier.
         2. Identify and list all people and organizations mentioned.
         3. For each identified entity, create two markdown-formatted entries that include:
 
         #### Search on Digital Prospecting:
-        - **Name** of the person or organization
-        - A **brief description** of their relevance or role
-        - A **customized link** for further exploration or research which you must construct by appending the entity's name to the appropriate base URL provided below:
-        **For a Person:**
+        - **Name** of the person or organization (exactly as it appears in the dossier)
+        - A **brief, factual description** (2-3 sentences) of their relevance or role based solely on information provided in the dossier
+        - A **customized link** for further exploration, constructed by appending the entity's name to the appropriate base URL:
         `http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name=[Name]`
-        **For an Organization:**
-        `http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name=[Name]`
 
         #### Perform another search on NewBizBot:
-        - **Name** of the person or organization (same as above)
+        - **Name** of the person or organization (identical to the one used above)
         - The same **brief description** as above
         - A **customized link** for NewBizBot search:
         `https://jznewbizbot2.streamlit.app/?input=[Name]`
 
+
         Sample format:
         #### Search on Digital Prospecting:
-        - [**John Doe**](http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name=John%20Doe) - Noted investor in renewable energy technologies.
-        - [**GreenTech Innovations**](http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name=GreenTech%20Innovations) - A non-profit organization focused on advancing green technology.
+        - [**John Doe**](http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name=John%20Doe) - CEO of XYZ Corp mentioned in the dossier. Described as having significant investments in renewable energy technologies.
+        - [**GreenTech Innovations**](http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name=GreenTech%20Innovations) - Non-profit organization referenced in the dossier. Focuses on advancing green technology according to the provided information.
 
         #### Perform another search on NewBizBot:
-        - [**John Doe**](https://jznewbizbot2.streamlit.app/?input=John%20Doe) - Noted investor in renewable energy technologies.
-        - [**GreenTech Innovations**](https://jznewbizbot2.streamlit.app/?input=GreenTech%20Innovations) - A non-profit organization focused on advancing green technology.
+        - [**John Doe**](https://jznewbizbot2.streamlit.app/?input=John%20Doe) - CEO of XYZ Corp mentioned in the dossier. Described as having significant investments in renewable energy technologies.
+        - [**GreenTech Innovations**](https://jznewbizbot2.streamlit.app/?input=GreenTech%20Innovations) - Non-profit organization referenced in the dossier. Focuses on advancing green technology according to the provided information.
         """
-
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_message),
             ("human", "{input}"),
         ])
-
         chain = LLMChain(
             llm=llm,
             prompt=prompt,
             verbose=debug_mode,
         )
-
         return chain
 
     dp_assistant = get_dp_assistant(model="llama-3.1-70b-versatile")
@@ -928,19 +975,3 @@ if with_clear_container(submit_clicked):
         dp_report += delta  # type: ignore
     st.markdown(spacing + dp_report)
 
-    # JavaScript for auto-scrolling
-    js_code = """
-    <script>
-    function scroll_to_results() {
-        var headers = window.parent.document.getElementsByTagName('h2');
-        for (var i = 0; i < headers.length; i++) {
-            if (headers[i].textContent.includes('Results:')) {
-                headers[i].scrollIntoView({behavior: 'smooth'});
-                break;
-            }
-        }
-    }
-    setTimeout(scroll_to_results, 100);  // Short delay to ensure the element exists
-    </script>
-    """
-    html(js_code)
