@@ -250,7 +250,6 @@ def pdf_reader(pdf_url):
     '''
     Extracts text from a PDF at the given URL and returns it in Markdown format. 
     Input a valid PDF URL to receive the full text content of the document formatted as Markdown. 
-    Always use this tool for form 990 Filings.
     '''
     custom_headers = None
     full_text = "# PDF Content\n\n"
@@ -907,8 +906,25 @@ if with_clear_container(submit_clicked):
     setTimeout(scroll_to_results, 100);  // Short delay to ensure the element exists
     </script>
     """
-    components.html(js_code, height=0)
-    spacing
+    # JavaScript for auto-scrolling
+    js_code = """
+    <script>
+    function scroll_to_results() {
+        var headers = window.parent.document.getElementsByTagName('h2');
+        for (var i = 0; i < headers.length; i++) {
+            if (headers[i].textContent.includes('Results:')) {
+                headers[i].scrollIntoView({behavior: 'smooth'});
+                break;
+            }
+        }
+    }
+    window.addEventListener('load', function() {
+        setTimeout(scroll_to_results, 100);  // Short delay to ensure the element exists
+    });
+    </script>
+    """
+    # Inject JavaScript into the app
+    components.html(js_code, height=0, width=0)  # Set height and width to 0 to avoid introducing a gap
     with st.expander("Relationship Diagram", expanded=True):
         with st.spinner("Generating diagram..."):
             mermaid_graph = generate_mermaid_graph(crew_result)
@@ -917,6 +933,7 @@ if with_clear_container(submit_clicked):
             image_path = mermaid_to_image(mermaid_graph)
             if image_path:
                 st.image(image_path)
+                st.toast(f"Finished generating the Relationship Diagram", icon='🪢')
             else:
                 st.error("Failed to generate the Relationship Diagram.")
         else:
@@ -948,8 +965,7 @@ if with_clear_container(submit_clicked):
         - A **customized link** for NewBizBot search:
         `https://jznewbizbot2.streamlit.app/?input=[Name]`
 
-
-        Sample format:
+        Sample format (Output only content following the below format and nothing else):
         #### Search on Digital Prospecting:
         - [**John Doe**](http://wealth.concert.site.gs.com/explore/pm/prospecting/search?name=John%20Doe) - CEO of XYZ Corp mentioned in the dossier. Described as having significant investments in renewable energy technologies.
         - [**GreenTech Innovations**](http://wealth.concert.site.gs.com/explore/pm/prospecting/org-search?name=GreenTech%20Innovations) - Non-profit organization referenced in the dossier. Focuses on advancing green technology according to the provided information.
