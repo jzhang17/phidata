@@ -32,3 +32,5 @@ typer==0.12.3
 typing-extensions==4.11.0
 Django==3.2.10
 django-tailwind==3.1.1
+Django==3.2.10
+django-tailwind==3.1.1
