@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="p-8">
+        <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold">Research Results</div>
+        <h1 class="block mt-1 text-lg leading-tight font-medium text-black">{{ research.query }}</h1>
+        <div class="mt-4">
+            <pre class="bg-gray-100 p-4 rounded-md overflow-x-auto">{{ research.results }}</pre>
+        </div>
+    </div>
+</div>
+{% endblock %}
